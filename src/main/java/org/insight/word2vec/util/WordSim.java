@@ -30,9 +30,7 @@ public class WordSim implements Comparable<WordSim>{
 
 	@Override
 	public String toString(){
-		
-		return "\n" + this.s + " : " + this.d;
-		
+		return String.format("%s : %s", this.s, this.d);
 	}
 
 }

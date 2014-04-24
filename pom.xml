@@ -6,7 +6,15 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>word2vec</name>
 
+	<dependencies>
 
+		<dependency>
+			<groupId>com.nativelibs4java</groupId>
+			<artifactId>javacl</artifactId>
+			<version>1.0.0-RC3</version>
+		</dependency>
+
+	</dependencies>
 
 	<build>
 		<pluginManagement>
@@ -20,6 +28,20 @@
 						<source>1.6</source>
 						<target>1.6</target>
 					</configuration>
+				</plugin>
+
+				<plugin>
+					<groupId>com.nativelibs4java</groupId>
+					<artifactId>maven-javacl-plugin</artifactId>
+					<version>1.0.0-RC3</version>
+					<executions>
+						<execution>
+							<phase>generate-sources</phase>
+							<goals>
+								<goal>compile</goal>
+							</goals>
+						</execution>
+					</executions>
 				</plugin>
 
 			</plugins>

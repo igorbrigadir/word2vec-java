@@ -30,8 +30,9 @@ public class VectorMath {
 	 */
 
 	public static float[] normalize(final float[] vector) {
+		double magnitude = magnitude(vector);
 		for (int i=0; i < vector.length; i++) {
-			Double norm = vector[i] * (1 / magnitude(vector));
+			Double norm = vector[i] * (1 / magnitude);
 			vector[i] = norm.floatValue();
 		}
 		return vector;
@@ -59,6 +60,17 @@ public class VectorMath {
 
 		for (int i = 0; i < v1.length; i++){
 			c[i] = v1[i] - v2[i];
+		}
+
+		return c;
+	}
+	
+	// return this - that
+	public static float[] multiply(float[] v1, float[] v2) {
+		float[] c = new float[v1.length];
+
+		for (int i = 0; i < v1.length; i++){
+			c[i] = v1[i] * v2[i];
 		}
 
 		return c;

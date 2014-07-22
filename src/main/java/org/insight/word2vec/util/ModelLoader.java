@@ -43,7 +43,8 @@ public class ModelLoader {
 
         // Tradeoff here: Faster Model Load time? Don't Normalize on load, Making Lots of Calculations? Normalize on load.
  
-          model.put(word, VectorMath.normalize(vector));
+        //  model.put(word, VectorMath.normalize(vector));
+        model.put(word, vector);
   
         // Progress bar...
         //System.out.println("");
@@ -111,7 +112,7 @@ public class ModelLoader {
       int byte2 = (vectorBuffer[(j*4)+1] & 0xFF) << 8;
       int byte3 = (vectorBuffer[(j*4)+2] & 0xFF) << 16;
       int byte4 = (vectorBuffer[(j*4)+3] & 0xFF) << 24;
-      // Encode byte values (0-255) above into a single int
+      // Encode the 4 byte values (0-255) above into a single int
       // Reverse bytes for endian compatibility
       int reverseBytes = (byte1 | byte2 | byte3 | byte4);
       vector[j] = Float.intBitsToFloat(reverseBytes);

@@ -105,6 +105,56 @@ public class Word2Vec extends HashMap<String, float[]> {
 	 public static void main(String[] args) {
 		
 	 }
+	 
+	 /*
+	  * 
+	class ContextTest {
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+		Word2Vec w2v = ModelLoader.load("/home/igor/tmp/stream_w24_r15_v200_rsf_201311012345.bin");
+		
+		System.out.println("");
+		
+		System.out.println("lax");
+		System.out.println("shooting");
+		
+		float[] vec = new float[200];
+		
+		//vec = VectorMath.plus(vec, w2v.vector("police"));
+		//vec = VectorMath.plus(vec, w2v.vector("shooting"));
+		//vec = VectorMath.plus(vec, w2v.vector("police"));
+		//vec = VectorMath.plus(vec, w2v.vector("shooting"));
+						
+		List<WordSim> sims = w2v.knn(vec, 100, true);
+		for (WordSim sim : sims) {
+			
+			System.out.println(sim.getString() + " - " + sim.getDouble());
+			
+		}
+		
+		System.out.println("");
+		
+			
+		System.exit(0);
+		
+		float[] result = VectorMath.multiply(w2v.vector("police"), w2v.vector("shooting"));
+						
+		List<WordSim> aspects = w2v.knn(result, 100, true);
+		
+		System.out.println("police * Shooting");
+		
+		for (WordSim sim : aspects) {
+			
+			System.out.println(sim.getString() + " - " + sim.getDouble());
+			
+		}
+	}
+		
+}
+
+*/
 
 }
 

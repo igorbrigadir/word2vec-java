@@ -6,7 +6,7 @@ import java.util.List;
 public class VectorMath {
 
 
-	public static double cosineDistance(final float[] vec1, final float[] vec2) {
+	public static double cosineSimilarity(final float[] vec1, final float[] vec2) {
 		double dot = 0.0D;
 		double sum1 = 0.0D;
 		double sum2 = 0.0D;

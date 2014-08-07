@@ -46,7 +46,7 @@ public class Word2Vec extends HashMap<String, float[]> {
 			//word2 = "</s>";
 			return Double.NaN;
 		}
-		return VectorMath.cosineDistance(vector(word1), vector(word2));
+		return VectorMath.cosineSimilarity(vector(word1), vector(word2));
 	}
 
 	
@@ -86,7 +86,7 @@ public class Word2Vec extends HashMap<String, float[]> {
 	public List<WordSim> knn(float[] vec, int k, boolean withScores) {
 		PriorityQueue<WordSim> kSimilarWords = new PriorityQueue<WordSim>(k);
 		for (Entry<String, float[]> e : this.entrySet()) {
-			WordSim sim = new WordSim(e.getKey(), VectorMath.cosineDistance(vec, e.getValue()));
+			WordSim sim = new WordSim(e.getKey(), VectorMath.cosineSimilarity(vec, e.getValue()));
 			kSimilarWords.add(sim);
 		}
 		List<WordSim> col = new ArrayList<WordSim>();

@@ -17,6 +17,18 @@ public class Word2Vec extends HashMap<String, float[]> {
 
 	private static final long serialVersionUID = 1L;
 
+	
+	public static Word2Vec normalizeModel(Word2Vec raw) {
+		Word2Vec norm = new Word2Vec();
+		
+		for (Entry<String, float[]> e : raw.entrySet()) {
+			norm.put(e.getKey(), VectorMath.normalize(e.getValue()));
+		}
+		
+		return norm;
+	}
+	
+	
 	/*
 	 * Check if word is in vocab:
 	 */
@@ -31,6 +43,20 @@ public class Word2Vec extends HashMap<String, float[]> {
 		return this.get(word);
 	}
 
+	/*
+	 * Get Vector Representation of a word
+	 */
+	public String debugvector(String word) {
+		float[] v = this.get(word);
+		
+		StringBuilder sb = new StringBuilder();
+		
+		for (float f : v) {
+			sb.append(String.format("%.6f, ", f));			
+		}
+		
+		return sb.toString();
+	}
 
 	/*
 	 * Cosine Distance between 2 words:

@@ -25,16 +25,16 @@ public class GloveTextModelLoader {
 			//InputStream gzipStream = new GZIPInputStream(fileStream);
 			//Reader decoder = new InputStreamReader(gzipStream, "UTF-8");
 
-			InputStream fileStream = new FileInputStream(word2vecModel);
+			InputStream fileStream = new FileInputStream(word2vecModel+".glove.txt");
 
-			System.out.println("Loading GloVe: " + word2vecModel);
+			System.out.println("Loading GloVe: " + word2vecModel+".glove.txt");
 
 
 			Reader decoder = new InputStreamReader(fileStream, "UTF-8");
 
 			BufferedReader buffered = new BufferedReader(decoder);
 
-			double numWords = 0;
+			long numWords = 0;
 			String line;			
 
 			while ((line = buffered.readLine()) != null) {
@@ -44,11 +44,9 @@ public class GloveTextModelLoader {
 				if (wordvec.length < 2) { break; }
 				//System.err.println(line);
 
-				model.put(wordvec[0], readFloatVector(wordvec, wordvec.length-1));
+				model.put(wordvec[0], readFloatVector(wordvec, wordvec.length));
 
 				//System.err.println(wordvec[0] + Arrays.toString(readFloatVector(wordvec, wordvec.length-1)));
-
-
 
 				numWords++;
 
@@ -74,7 +72,7 @@ public class GloveTextModelLoader {
 	private static float[] readFloatVector(String[] line, int vectorSize) throws IOException {
 		// Vector is an Array of Floats...
 
-		float[] vector = new float[vectorSize];
+		float[] vector = new float[vectorSize-1];
 
 		// Vector:
 		for (int j=1; j < vectorSize; j++) {

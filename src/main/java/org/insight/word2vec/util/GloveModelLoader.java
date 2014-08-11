@@ -14,21 +14,22 @@ import org.insight.word2vec.Word2Vec;
 
 public class GloveModelLoader {
 
-	public static Word2Vec load (String word2vecModel) {
+	public static Word2Vec load (String vocabFile, String word2vecModel, int vecSize, boolean withContexts, boolean bias) {
 
 		Word2Vec model = new Word2Vec();
 
 		try {
 
-			BufferedInputStream bufIn = new BufferedInputStream(new FileInputStream(word2vecModel), 131072); // 128KB Buffer
+			FileInputStream fs = new FileInputStream(word2vecModel+".glove.bin");
+
+			BufferedInputStream bufIn = new BufferedInputStream(fs, 131072); // 128KB Buffer
 			DataInputStream ds = new DataInputStream(bufIn);
 
-			// no header:
+			List<String> vocab = FileUtils.readLines(new File(vocabFile));
+			long numWords = vocab.size();
 
-			List<String> vocab = FileUtils.readLines(new File("/home/igor/glove/vocab.txt"));
-			int numWords = vocab.size();
-			
-			int vecSize = 5 + 1; // +1 Bias Term!
+			// vector size = num of bytes in total / 16 / vocab
+			//int vecSize = (int) (fs.getChannel().size() / 16 / (numWords - 1));
 
 			System.out.println( numWords + " Words with Vectors of size " + vecSize);
 
@@ -38,46 +39,24 @@ public class GloveModelLoader {
 				// Word:
 				String word = vocab.get(i).split(" ")[0];
 				// Vector:
-				float[] vector = readFloatVector(ds, vecSize);
-
-				if (i < 1) {
-					System.out.println(word);
-					for (int j=0; j < vecSize; j++) {
-						System.out.print("w " + String.format("%6f", vector[j]));
-					}
-					System.out.println("");
-				}
+				
+				float[] vector = bias ? readFloatVector(ds, vecSize, true) : readFloatVector(ds, vecSize);
 
 				model.put(word, vector);
 			}
 
 			//context vecs:
 
-			for (int i=0; i < numWords; i++) { // 3= numwords
-				// Word:
-				String word = vocab.get(i).split(" ")[0];
-				// Vector:
-				float[] vector = readFloatVector(ds, vecSize);
+			if (withContexts) {
 
-				if (i < 1) {
-					System.out.println(word);
-					for (int j=0; j < vecSize; j++) {
-						System.out.print("~ " + String.format("%6f", vector[j]));
-					}
-					System.out.println("");
+				for (int i=0; i < numWords; i++) { // 3= numwords
+					// Word:
+					String word = vocab.get(i).split(" ")[0];
+					// Vector:
+					float[] vector = bias ? readFloatVector(ds, vecSize, true) : readFloatVector(ds, vecSize);
+
+					model.put(word, VectorMath.addAll(model.get(word), vector));
 				}
-
-				model.put(word, VectorMath.addAll(model.get(word), vector));
-
-			}
-
-
-			for (int i=0; i < 1; i++) { // 3= numwords
-				System.out.println("sachin");
-				for (int j=0; j < vecSize; j++) {
-					System.out.print(" " + String.format("%6f", model.get("sachin")[j]));
-				}
-				System.out.println("");
 			}
 
 			ds.close();
@@ -93,28 +72,6 @@ public class GloveModelLoader {
 		return model;
 	}
 
-
-	/*
-	 * Read a string from the binary model (System default should be UTF-8):
-	 */
-	private static String readString(DataInputStream ds) throws IOException {
-
-		ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
-		while (true) {
-			byte byteValue = ds.readByte();
-			if (byteValue != 32 && byteValue != 10) {
-				byteBuffer.write(byteValue);
-			} else if (byteBuffer.size() > 0) {
-				break;
-			}
-		}
-		//byteBuffer.flush();
-		String word = byteBuffer.toString();
-		byteBuffer.close();
-		return word;
-	}
-
-
 	/*
 	 * Read a Vector - Array of Floats from the binary model:
 	 */
@@ -124,8 +81,26 @@ public class GloveModelLoader {
 		float[] vector = new float[vectorSize];
 
 		// Vector:
-
 		for (int j=0; j < vectorSize; j++) {
+			long   l = ds.readLong();
+			double d = Double.longBitsToDouble(Long.reverseBytes(l));
+			vector[j] = (float)d;
+		}
+		
+		// Bias term: 
+		ds.readLong();
+
+		return vector;
+	}
+		
+	private static float[] readFloatVector(DataInputStream ds, int vectorSize, boolean bias) throws IOException {
+		// Vector is an Array of Floats...
+
+		float[] vector = new float[vectorSize+1];
+
+		// Vector:
+
+		for (int j=0; j < vectorSize+1; j++) {
 
 			long   l = ds.readLong();
 			double d = Double.longBitsToDouble(Long.reverseBytes(l));
@@ -133,10 +108,6 @@ public class GloveModelLoader {
 			vector[j] = (float)d;
 
 		}
-
-
-
-
 		return vector;
 	}
 

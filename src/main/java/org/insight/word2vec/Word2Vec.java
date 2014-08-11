@@ -77,7 +77,11 @@ public class Word2Vec extends HashMap<String, float[]> {
 
 	
 	// Adding several words:
-	public float[] sentenseVector(String... words) {
+	
+	public float[] sentenceVector(String sentence) {
+		return sentenceVector(sentence.toLowerCase().split(" "));
+	}
+	public float[] sentenceVector(String... words) {
 		List<float[]> vectors = new ArrayList<float[]>();
 		for (String w : words) {
 			if (this.contains(w)) {

@@ -6,8 +6,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.Arrays;
 
 import org.insight.word2vec.Word2Vec;
+
+import com.ochafik.util.string.StringUtils;
 
 
 public class GloveTextModelLoader {
@@ -38,12 +41,20 @@ public class GloveTextModelLoader {
 				// Split into words:
 				String[] wordvec = line.split(" ");
 
+				if (wordvec.length < 2) { break; }
+				//System.err.println(line);
+
 				model.put(wordvec[0], readFloatVector(wordvec, wordvec.length-1));
+
+				//System.err.println(wordvec[0] + Arrays.toString(readFloatVector(wordvec, wordvec.length-1)));
+
+
 
 				numWords++;
 
 			} // Over entire file
 			buffered.close();
+			fileStream.close();
 
 			System.out.println( numWords + " Words loaded. ");
 
@@ -66,9 +77,17 @@ public class GloveTextModelLoader {
 		float[] vector = new float[vectorSize];
 
 		// Vector:
-		for (int j=1; j < vectorSize+1; j++) {
-			double d = Double.parseDouble(line[j]);
-			vector[j] = (float)d;
+		for (int j=1; j < vectorSize; j++) {
+			try {
+				double d = Double.parseDouble(line[j]);
+				vector[j-1] = (float)d;
+			} catch (NumberFormatException e) {
+
+				System.out.println(vectorSize + ":" + Arrays.toString(line));
+				System.out.println("ERROR:" + e.getMessage());
+
+				vector[j-1] = 0.0f;
+			}
 		}
 		return vector;
 	}

@@ -49,12 +49,12 @@ public class ModelLoader {
         // Progress bar...
         //System.out.println("");
         //System.out.println(offset);
-        //if (i % 10000 == 0) {
-        // 	System.err.print(".");
-        // }
-        //if (i % 100000 == 0) {
-        //	System.err.println("");
-        //}
+        if (i % 10000 == 0) {
+         	System.err.print(".");
+         }
+        if (i % 100000 == 0) {
+        	System.err.println("");
+        }
       }
 
       ds.close();

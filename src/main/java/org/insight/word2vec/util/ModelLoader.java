@@ -74,7 +74,7 @@ public class ModelLoader {
   /*
    * Read a string from the binary model (System default should be UTF-8):
    */
-  private static String readString(DataInputStream ds) throws IOException {
+  public static String readString(DataInputStream ds) throws IOException {
 
     ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
     while (true) {
@@ -95,7 +95,7 @@ public class ModelLoader {
   /*
    * Read a Vector - Array of Floats from the binary model:
    */
-  private static float[] readFloatVector(DataInputStream ds, int vectorSize) throws IOException {
+  public static float[] readFloatVector(DataInputStream ds, int vectorSize) throws IOException {
     // Vector is an Array of Floats...
     float[] vector = new float[vectorSize];
 

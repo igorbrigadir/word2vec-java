@@ -122,8 +122,11 @@ public class DiskWord2Vec extends Word2Vec {
 		
 		if (cache.contains(searchWord)) {
 			return cache.vector(searchWord);
-		} 			
+		} else {
+			return null;
+		}
 		
+	/*
 		try {
 
 			BufferedInputStream bufIn = new BufferedInputStream(new FileInputStream(word2vecModel), 131072); // 128KB Buffer 4096
@@ -177,7 +180,7 @@ public class DiskWord2Vec extends Word2Vec {
 		} else {
 			return null;
 		}
-		
+	*/	
 		
 	}
 

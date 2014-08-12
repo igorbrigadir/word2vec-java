@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.PriorityQueue;
 
+import org.insight.word2vec.util.StopWords;
 import org.insight.word2vec.util.VectorMath;
 import org.insight.word2vec.util.WordSim;
 
@@ -78,12 +79,20 @@ public class Word2Vec extends HashMap<String, float[]> {
 	
 	// Adding several words:
 	
-	public float[] sentenceVector(String sentence) {
-		return sentenceVector(sentence.toLowerCase().split(" "));
+	
+	
+	public float[] sentenceVector(boolean filter, String sentence) {
+		return sentenceVector(filter, sentence.toLowerCase().split(" "));
 	}
-	public float[] sentenceVector(String... words) {
+	public float[] sentenceVector(boolean filter, String... words) {
 		List<float[]> vectors = new ArrayList<float[]>();
 		for (String w : words) {
+			
+			// Stopword filter:
+			if (filter && StopWords.isStopWord(w)) {
+				continue;
+			}
+			
 			if (this.contains(w)) {
 				vectors.add(vector(w));
 			}

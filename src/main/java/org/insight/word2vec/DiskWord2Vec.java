@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.PriorityQueue;
+import java.util.Set;
 
 import org.insight.word2vec.util.ModelLoader;
 import org.insight.word2vec.util.VectorMath;
@@ -52,6 +53,65 @@ public class DiskWord2Vec extends Word2Vec {
 		}
 
 	}
+	
+	public boolean preCache(Set<String> words) {
+		
+		try {
+
+			BufferedInputStream bufIn = new BufferedInputStream(new FileInputStream(word2vecModel), 131072); // 128KB Buffer 4096
+			DataInputStream ds = new DataInputStream(bufIn);
+
+			// Read header:
+			int numWords = Integer.parseInt(ModelLoader.readString(ds));
+			int vecSize = Integer.parseInt(ModelLoader.readString(ds));
+
+			
+			
+			for (int i=0; i < numWords; i++) {
+				// Word:
+				String word = ModelLoader.readString(ds);
+				// Vector:
+				float[] vector = ModelLoader.readFloatVector(ds, vecSize);
+
+				if (words.contains(word)) {
+
+					cache.put(word, vector);
+				
+		
+					
+					// Progress bar...
+					if (i % 30 == 0) {
+						System.err.print("."+cache.size());
+					}
+					if (i % 90 == 0) {
+						System.err.println("."+cache.size() + " of " + words.size());
+					}
+					
+					if (cache.size() == words.size()) {
+						break;
+					}
+
+				}
+
+
+
+
+			}
+
+			ds.close();
+			bufIn.close();
+
+			System.out.println(numWords + " Words with Vectors of size " + vecSize + " LOADED!");
+
+		} catch (IOException e) {
+			System.err.println("ERROR: Failed to load model: " + word2vecModel);
+			e.printStackTrace();
+			return false;
+		}
+		
+		return true;
+		
+	}
 
 	/*
 	 * Get Vector Representation of a word
@@ -62,11 +122,11 @@ public class DiskWord2Vec extends Word2Vec {
 		
 		if (cache.contains(searchWord)) {
 			return cache.vector(searchWord);
-		}
+		} 			
 		
 		try {
 
-			BufferedInputStream bufIn = new BufferedInputStream(new FileInputStream(word2vecModel), 131072); // 128KB Buffer
+			BufferedInputStream bufIn = new BufferedInputStream(new FileInputStream(word2vecModel), 131072); // 128KB Buffer 4096
 			DataInputStream ds = new DataInputStream(bufIn);
 
 			// Read header:
@@ -84,18 +144,21 @@ public class DiskWord2Vec extends Word2Vec {
 
 					cache.put(word, vector);
 					found = true;
+					
+					// Progress bar...
+					if (i % 30 == 0) {
+						System.err.print("."+cache.size());
+					}
+					if (i % 90 == 0) {
+						System.err.println("."+cache.size());
+					}
+					
 					break;
 
 				}
 
 
-				// Progress bar...
-				if (i % 10000 == 0) {
-					System.err.print(".");
-				}
-				if (i % 100000 == 0) {
-					System.err.println("");
-				}
+
 
 			}
 
@@ -114,6 +177,8 @@ public class DiskWord2Vec extends Word2Vec {
 		} else {
 			return null;
 		}
+		
+		
 	}
 
 

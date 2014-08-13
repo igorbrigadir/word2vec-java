@@ -13,7 +13,13 @@
 			<artifactId>javacl</artifactId>
 			<version>1.0.0-RC3</version>
 		</dependency>
-		
+
+		<dependency>
+			<groupId>me.lemire.integercompression</groupId>
+			<artifactId>JavaFastPFOR</artifactId>
+			<version>0.0.12</version>
+		</dependency>
+
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>

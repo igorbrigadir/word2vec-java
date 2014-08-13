@@ -14,7 +14,7 @@ import org.insight.word2vec.util.WordSim;
 /*
  * A Java wrapper for Word2Vec - Only Reads a pre trained model!
  */
-public class Word2Vec extends HashMap<String, float[]> {
+public class Word2Vec extends HashMap<String, float[]> implements WordVectorSpace {
 
 	private static final long serialVersionUID = 1L;
 
@@ -33,6 +33,7 @@ public class Word2Vec extends HashMap<String, float[]> {
 	/*
 	 * Check if word is in vocab:
 	 */
+	@Override
 	public boolean contains(String word) {
 		return this.containsKey(word);
 	}
@@ -40,6 +41,7 @@ public class Word2Vec extends HashMap<String, float[]> {
 	/*
 	 * Get Vector Representation of a word
 	 */
+	@Override
 	public float[] vector(String word) {
 		return this.get(word);
 	}
@@ -80,10 +82,11 @@ public class Word2Vec extends HashMap<String, float[]> {
 	// Adding several words:
 	
 	
-	
+	@Override
 	public float[] sentenceVector(boolean filter, String sentence) {
 		return sentenceVector(filter, sentence.toLowerCase().split(" "));
 	}
+	@Override
 	public float[] sentenceVector(boolean filter, String... words) {
 		List<float[]> vectors = new ArrayList<float[]>();
 		for (String w : words) {

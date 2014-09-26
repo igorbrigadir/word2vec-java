@@ -171,8 +171,8 @@ public class Word2Vec extends HashMap<String, float[]> implements WordVectorSpac
 		}
 		List<WordSim> col = new ArrayList<WordSim>();
 		//col.clear();
-		for (int i=0; i < k; i++  ) {
-			
+		
+		for (int i=0; i < k+1; i++  ) {
 			col.add(kSimilarWords.poll());		
 		}
 		return col;

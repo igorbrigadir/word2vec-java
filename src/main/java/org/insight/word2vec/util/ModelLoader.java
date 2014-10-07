@@ -43,8 +43,8 @@ public class ModelLoader {
 
         // Tradeoff here: Faster Model Load time? Don't Normalize on load, Making Lots of Calculations? Normalize on load.
  
-          model.put(word, VectorMath.normalize(vector));
-//        model.put(word, vector);
+//      model.put(word, VectorMath.normalize(vector));
+        model.put(word, vector);
   
         // Progress bar...
         //System.out.println("");

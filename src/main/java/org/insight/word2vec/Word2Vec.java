@@ -1,11 +1,15 @@
 package org.insight.word2vec;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.PriorityQueue;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.insight.word2vec.util.StopWords;
 import org.insight.word2vec.util.VectorMath;
 import org.insight.word2vec.util.WordSim;
@@ -18,6 +22,30 @@ public class Word2Vec extends HashMap<String, float[]> implements WordVectorSpac
 
 	private static final long serialVersionUID = 1L;
 
+	public boolean saveAsText(File output) {
+		
+		for (Entry<String, float[]> entry : this.entrySet()) {
+								
+			
+			
+			
+			
+		String word = String.format("%s %s\n", entry.getKey(), StringUtils.join(entry.getValue(), ' '));
+		try {
+			FileUtils.writeStringToFile(output, word, true);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		
+				
+		}
+		
+		return true;
+		
+	}
+	
 
 	public static Word2Vec normalizeModel(Word2Vec raw) {
 		Word2Vec norm = new Word2Vec();

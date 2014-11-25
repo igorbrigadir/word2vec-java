@@ -10,7 +10,12 @@ import org.insight.word2vec.Word2Vec;
 
 public class ModelLoader {
 
-  public static Word2Vec load (String word2vecModel) {
+	public static Word2Vec load (String word2vecModel) {
+		return load(word2vecModel, 0L);
+	}
+		
+	
+	public static Word2Vec load (String word2vecModel, long wordLimit) {
 
     Word2Vec model = new Word2Vec();
 
@@ -20,10 +25,14 @@ public class ModelLoader {
       DataInputStream ds = new DataInputStream(bufIn);
 
       // Read header:
-      int numWords = Integer.parseInt(readString(ds));
+      int numWords = Integer.parseInt(readString(ds));     
       int vecSize = Integer.parseInt(readString(ds));
 
-      System.out.println( numWords + " Words with Vectors of size " + vecSize);
+      if (wordLimit <= 0 ) {
+    	  wordLimit = numWords;
+      }
+      
+      System.out.println( numWords + " Words with Vectors of size " + vecSize + " Loading " + wordLimit);
 
 
       // Read Data:
@@ -43,18 +52,18 @@ public class ModelLoader {
 
         // Tradeoff here: Faster Model Load time? Don't Normalize on load, Making Lots of Calculations? Normalize on load.
  
-//      model.put(word, VectorMath.normalize(vector));
-        model.put(word, vector);
+      model.put(word, VectorMath.normalize(vector));
+      //model.put(word, vector);
   
         // Progress bar...
         //System.out.println("");
         //System.out.println(offset);
-        if (i % 10000 == 0) {
-         	System.err.print(".");
-         }
-        if (i % 100000 == 0) {
-        	System.err.println("");
-        }
+        //if (i % 10000 == 0) {
+        // 	System.err.print(".");
+        // }
+        //if (i % 100000 == 0) {
+        //	System.err.println("");
+        //}
       }
 
       ds.close();

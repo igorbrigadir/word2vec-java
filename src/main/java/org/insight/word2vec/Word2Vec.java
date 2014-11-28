@@ -26,10 +26,7 @@ public class Word2Vec extends HashMap<String, float[]> implements WordVectorSpac
 		
 		for (Entry<String, float[]> entry : this.entrySet()) {
 								
-			
-			
-			
-			
+					
 		String word = String.format("%s %s\n", entry.getKey(), StringUtils.join(entry.getValue(), ' '));
 		try {
 			FileUtils.writeStringToFile(output, word, true);

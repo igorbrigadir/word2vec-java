@@ -37,14 +37,14 @@ public class ModelLoader {
 
       // Read Data:
 
-      for (int i=0; i < numWords; i++) {
+      for (int i=0; i < wordLimit; i++) {
         // Word:
         String word = readString(ds);
         // Vector:
         float[] vector = readFloatVector(ds, vecSize);
 
         //FileUtils.writeStringToFile(new File(word2vecModel + "words.txt"), word + "\n", true);
-        //System.out.println(word);
+       //System.out.println(word);
         //for (int j=0; j < vecSize; j++) {
         //	System.out.print(" " + String.format("%6f", vector[j]));
         //}

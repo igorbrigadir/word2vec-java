@@ -23,29 +23,25 @@ public class Word2Vec extends HashMap<String, float[]> implements WordVectorSpac
 	private static final long serialVersionUID = 1L;
 
 	public boolean saveAsText(File output) {
-		
+
 		for (Entry<String, float[]> entry : this.entrySet()) {
-								
-			
-			
-			
-			
-		String word = String.format("%s %s\n", entry.getKey(), StringUtils.join(entry.getValue(), ' '));
-		try {
-			FileUtils.writeStringToFile(output, word, true);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
+
+			String word = String.format("%s %s\n", entry.getKey(), StringUtils.join(entry.getValue(), ' '));
+			try {
+				FileUtils.writeStringToFile(output, word, true);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			}
+
+
 		}
-		
-				
-		}
-		
+
 		return true;
-		
+
 	}
-	
+
 
 	public static Word2Vec normalizeModel(Word2Vec raw) {
 		Word2Vec norm = new Word2Vec();
@@ -138,12 +134,12 @@ public class Word2Vec extends HashMap<String, float[]> implements WordVectorSpac
 			System.err.println( "Out of vocab word: " + word );
 			return new ArrayList<String>();
 		}
-		return knn(this.vector(word), k);
+		return knn(word, this.vector(word), k);
 	}	
 
 	// Used by System, tweets are vecs - together withsentenseVector
-	public List<String> knn(float[] vec, int k) {
-		List<WordSim> words = knn(vec, k, true);
+	public List<String> knn(String word, float[] vec, int k) {
+		List<WordSim> words = knn(word, vec, k, true);
 
 		List<String> ret = new ArrayList<String>();
 		for (WordSim w : words) {
@@ -153,16 +149,23 @@ public class Word2Vec extends HashMap<String, float[]> implements WordVectorSpac
 	}
 
 	// Internal! but can be called to get similarities!
-	public List<WordSim> knn(float[] vec, int k, boolean withScores) {
-		PriorityQueue<WordSim> kSimilarWords = new PriorityQueue<WordSim>(k);
+	public List<WordSim> knn(String word, float[] vec, int k, boolean withScores) {
+		PriorityQueue<WordSim> kSimilarWords = new PriorityQueue<WordSim>(k*2);
+
 		for (Entry<String, float[]> e : this.entrySet()) {
 			WordSim sim = new WordSim(e.getKey(), VectorMath.cosineSimilarity(vec, e.getValue()));
 			kSimilarWords.add(sim);
 		}
+
 		List<WordSim> col = new ArrayList<WordSim>();
 		//col.clear();
 		for (int i=0; i < k; i++  ) {
-			col.add(kSimilarWords.poll());		
+
+			WordSim ws = kSimilarWords.poll();
+
+			if (!ws.getString().equalsIgnoreCase(word)) {			
+				col.add(ws);	
+			}
 		}
 		return col;
 	}
@@ -193,13 +196,13 @@ public class Word2Vec extends HashMap<String, float[]> implements WordVectorSpac
 			}
 
 			WordSim sim = new WordSim(e.getKey(), VectorMath.cosineSimilarity(vec, e.getValue()));
-			
+
 			kSimilarWords.add(sim);
-			
+
 		}
 		List<WordSim> col = new ArrayList<WordSim>();
 		//col.clear();
-		
+
 		for (int i=0; i < k+1; i++  ) {
 			col.add(kSimilarWords.poll());		
 		}
@@ -238,7 +241,7 @@ public class Word2Vec extends HashMap<String, float[]> implements WordVectorSpac
 			return new ArrayList<WordSim>();
 		}
 
-		return knn(this.vector(word), k, true);
+		return knn(word, this.vector(word), k, true);
 
 	}	
 

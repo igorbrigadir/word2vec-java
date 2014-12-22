@@ -5,17 +5,14 @@ import java.util.List;
 
 public class VectorMath {
 
-
 	public static double cosineSimilarity(final float[] vec1, final float[] vec2) {
 		double dot = 0.0D;
 		double sum1 = 0.0D;
 		double sum2 = 0.0D;
 		for(int i=0; i < vec1.length; i++) {
-			
 			dot += (vec1[i] * vec2[i]);
 			sum1 += (vec1[i] * vec1[i]);
 			sum2 += (vec2[i] * vec2[i]);
-		
 		}
 		return dot / (Math.sqrt(sum1) * Math.sqrt(sum2));
 	}

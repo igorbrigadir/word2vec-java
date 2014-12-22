@@ -32,7 +32,7 @@ public class ModelLoader {
     	  wordLimit = numWords;
       }
       
-      System.out.println( numWords + " Words with Vectors of size " + vecSize + " Loading " + wordLimit);
+      //System.out.println( numWords + " Words with Vectors of size " + vecSize + " Loading " + wordLimit);
 
 
       // Read Data:
@@ -69,7 +69,7 @@ public class ModelLoader {
       ds.close();
       bufIn.close();
 
-      System.out.println(numWords + " Words with Vectors of size " + vecSize + " LOADED!");
+      //System.out.println(numWords + " Words with Vectors of size " + vecSize + " LOADED!");
 
     } catch (IOException e) {
       System.err.println("ERROR: Failed to load model: " + word2vecModel);

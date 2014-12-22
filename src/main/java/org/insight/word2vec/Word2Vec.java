@@ -26,6 +26,7 @@ public class Word2Vec extends HashMap<String, float[]> implements WordVectorSpac
 
 		for (Entry<String, float[]> entry : this.entrySet()) {
 
+
 			String word = String.format("%s %s\n", entry.getKey(), StringUtils.join(entry.getValue(), ' '));
 			try {
 				FileUtils.writeStringToFile(output, word, true);
@@ -33,229 +34,231 @@ public class Word2Vec extends HashMap<String, float[]> implements WordVectorSpac
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return false;
+
 			}
 
+			
 
 		}
-
+		
 		return true;
-
+		
 	}
 
 
-	public static Word2Vec normalizeModel(Word2Vec raw) {
-		Word2Vec norm = new Word2Vec();
+		public static Word2Vec normalizeModel(Word2Vec raw) {
+			Word2Vec norm = new Word2Vec();
 
-		for (Entry<String, float[]> e : raw.entrySet()) {
-			norm.put(e.getKey(), VectorMath.normalize(e.getValue()));
-		}
-
-		return norm;
-	}
-
-
-	/*
-	 * Check if word is in vocab:
-	 */
-	@Override
-	public boolean contains(String word) {
-		return this.containsKey(word);
-	}
-
-	/*
-	 * Get Vector Representation of a word
-	 */
-	@Override
-	public float[] vector(String word) {
-		return this.get(word);
-	}
-
-	/*
-	 * Get Vector Representation of a word
-	 */
-	public String debugvector(String word) {
-		float[] v = this.get(word);
-
-		StringBuilder sb = new StringBuilder();
-
-		for (float f : v) {
-			sb.append(String.format("%.6f, ", f));			
-		}
-
-		return sb.toString();
-	}
-
-	/*
-	 * Cosine Distance between 2 words:
-	 */
-	public Double cosineDistance(String word1, String word2) {
-		if (!this.contains(word1)) {
-			//System.err.println( "Out of vocab word: " + word1 );
-			//word1 = "</s>";
-			return Double.NaN;
-		}
-		if (!this.contains(word2)) {
-			//System.err.println( "Out of vocab word: " + word2 );
-			//word2 = "</s>";
-			return Double.NaN;
-		}
-		return VectorMath.cosineSimilarity(vector(word1), vector(word2));
-	}
-
-
-	// Adding several words:
-
-
-	@Override
-	public float[] sentenceVector(boolean filter, String sentence) {
-		return sentenceVector(filter, sentence.toLowerCase().split(" "));
-	}
-	@Override
-	public float[] sentenceVector(boolean filter, String... words) {
-		List<float[]> vectors = new ArrayList<float[]>();
-		for (String w : words) {
-
-			// Stopword filter:
-			if (filter && StopWords.isStopWord(w)) {
-				continue;
+			for (Entry<String, float[]> e : raw.entrySet()) {
+				norm.put(e.getKey(), VectorMath.normalize(e.getValue()));
 			}
 
-			if (this.contains(w)) {
-				vectors.add(vector(w));
-			}
-		}
-		return VectorMath.addAll(vectors);
-	}
-
-
-	// Linear search k Nearest Neighbour:		
-	public List<String> knn(String word, int k) {
-		if (!this.contains(word)) {
-			System.err.println( "Out of vocab word: " + word );
-			return new ArrayList<String>();
-		}
-		return knn(word, this.vector(word), k);
-	}	
-
-	// Used by System, tweets are vecs - together withsentenseVector
-	public List<String> knn(String word, float[] vec, int k) {
-		List<WordSim> words = knn(word, vec, k, true);
-
-		List<String> ret = new ArrayList<String>();
-		for (WordSim w : words) {
-			ret.add(w.getString());
-		}
-		return ret;
-	}
-
-	// Internal! but can be called to get similarities!
-	public List<WordSim> knn(String word, float[] vec, int k, boolean withScores) {
-		PriorityQueue<WordSim> kSimilarWords = new PriorityQueue<WordSim>(k*2);
-
-		for (Entry<String, float[]> e : this.entrySet()) {
-			WordSim sim = new WordSim(e.getKey(), VectorMath.cosineSimilarity(vec, e.getValue()));
-			kSimilarWords.add(sim);
+			return norm;
 		}
 
-		List<WordSim> col = new ArrayList<WordSim>();
-		//col.clear();
-		for (int i=0; i < k; i++  ) {
 
-			WordSim ws = kSimilarWords.poll();
-
-			if (!ws.getString().equalsIgnoreCase(word)) {			
-				col.add(ws);	
-			}
-		}
-		return col;
-	}
-
-
-
-	// WITH PREFIX:
-
-	public List<WordSim> knn(String word, int k, boolean withScores, String prefix) {
-		if (!this.contains(word)) {
-			System.err.println( "Out of vocab word: " + word );
-			return new ArrayList<WordSim>();
+		/*
+		 * Check if word is in vocab:
+		 */
+		@Override
+		public boolean contains(String word) {
+			return this.containsKey(word);
 		}
 
-		if (prefix.equalsIgnoreCase("none")) {
-			return knn(this.vector(word), k, withScores, true);
-		} else {
-			return	knn(this.vector(word), k, withScores, prefix);
+		/*
+		 * Get Vector Representation of a word
+		 */
+		@Override
+		public float[] vector(String word) {
+			return this.get(word);
 		}
-	}
 
-	public List<WordSim> knn(float[] vec, int k, boolean withScores, String prefix) {
-		PriorityQueue<WordSim> kSimilarWords = new PriorityQueue<WordSim>(k);
-		for (Entry<String, float[]> e : this.entrySet()) {
+		/*
+		 * Get Vector Representation of a word
+		 */
+		public String debugvector(String word) {
+			float[] v = this.get(word);
 
-			if (!e.getKey().startsWith(prefix)) {
-				continue;
+			StringBuilder sb = new StringBuilder();
+
+			for (float f : v) {
+				sb.append(String.format("%.6f, ", f));			
 			}
 
-			WordSim sim = new WordSim(e.getKey(), VectorMath.cosineSimilarity(vec, e.getValue()));
-
-			kSimilarWords.add(sim);
-
+			return sb.toString();
 		}
-		List<WordSim> col = new ArrayList<WordSim>();
-		//col.clear();
 
-		for (int i=0; i < k+1; i++  ) {
-			col.add(kSimilarWords.poll());		
+		/*
+		 * Cosine Distance between 2 words:
+		 */
+		public Double cosineDistance(String word1, String word2) {
+			if (!this.contains(word1)) {
+				//System.err.println( "Out of vocab word: " + word1 );
+				//word1 = "</s>";
+				return Double.NaN;
+			}
+			if (!this.contains(word2)) {
+				//System.err.println( "Out of vocab word: " + word2 );
+				//word2 = "</s>";
+				return Double.NaN;
+			}
+			return VectorMath.cosineSimilarity(vector(word1), vector(word2));
 		}
-		return col;
-	}
 
-	public List<WordSim> knn(float[] vec, int k, boolean withScores, boolean prefix) {
-		PriorityQueue<WordSim> kSimilarWords = new PriorityQueue<WordSim>(k);
-		for (Entry<String, float[]> e : this.entrySet()) {
 
-			if (e.getKey().startsWith("@") || e.getKey().startsWith("#")) {
-				continue;
+		// Adding several words:
+
+
+		@Override
+		public float[] sentenceVector(boolean filter, String sentence) {
+			return sentenceVector(filter, sentence.toLowerCase().split(" "));
+		}
+		@Override
+		public float[] sentenceVector(boolean filter, String... words) {
+			List<float[]> vectors = new ArrayList<float[]>();
+			for (String w : words) {
+
+				// Stopword filter:
+				if (filter && StopWords.isStopWord(w)) {
+					continue;
+				}
+
+				if (this.contains(w)) {
+					vectors.add(vector(w));
+				}
+			}
+			return VectorMath.addAll(vectors);
+		}
+
+
+		// Linear search k Nearest Neighbour:		
+		public List<String> knn(String word, int k) {
+			if (!this.contains(word)) {
+				System.err.println( "Out of vocab word: " + word );
+				return new ArrayList<String>();
+			}
+			return knn(word, this.vector(word), k);
+		}	
+
+		// Used by System, tweets are vecs - together withsentenseVector
+		public List<String> knn(String word, float[] vec, int k) {
+			List<WordSim> words = knn(word, vec, k, true);
+
+			List<String> ret = new ArrayList<String>();
+			for (WordSim w : words) {
+				ret.add(w.getString());
+			}
+			return ret;
+		}
+
+		// Internal! but can be called to get similarities!
+		public List<WordSim> knn(String word, float[] vec, int k, boolean withScores) {
+			PriorityQueue<WordSim> kSimilarWords = new PriorityQueue<WordSim>(k*2);
+
+			for (Entry<String, float[]> e : this.entrySet()) {
+				WordSim sim = new WordSim(e.getKey(), VectorMath.cosineSimilarity(vec, e.getValue()));
+				kSimilarWords.add(sim);
 			}
 
-			WordSim sim = new WordSim(e.getKey(), VectorMath.cosineSimilarity(vec, e.getValue()));
-			kSimilarWords.add(sim);
-		}
-		List<WordSim> col = new ArrayList<WordSim>();
-		//col.clear();
-		for (int i=0; i < k; i++  ) {
-			col.add(kSimilarWords.poll());		
-		}
-		return col;
-	}
+			List<WordSim> col = new ArrayList<WordSim>();
+			//col.clear();
+			for (int i=0; i < k; i++  ) {
 
+				WordSim ws = kSimilarWords.poll();
 
-
-
-
-
-	// Debug / print:
-
-	public List<WordSim> knn(String word, int k, boolean debug) {
-		if (!this.contains(word)) {
-			System.err.println( "Out of vocab word: " + word );
-			return new ArrayList<WordSim>();
+				if (!ws.getString().equalsIgnoreCase(word)) {			
+					col.add(ws);	
+				}
+			}
+			return col;
 		}
 
-		return knn(word, this.vector(word), k, true);
-
-	}	
 
 
-	/*
-	 * Test:
-	 */
+		// WITH PREFIX:
 
-	public static void main(String[] args) {
+		public List<WordSim> knn(String word, int k, boolean withScores, String prefix) {
+			if (!this.contains(word)) {
+				System.err.println( "Out of vocab word: " + word );
+				return new ArrayList<WordSim>();
+			}
 
-	}
+			if (prefix.equalsIgnoreCase("none")) {
+				return knn(this.vector(word), k, withScores, true);
+			} else {
+				return	knn(this.vector(word), k, withScores, prefix);
+			}
+		}
 
-	/*
-	 * 
+		public List<WordSim> knn(float[] vec, int k, boolean withScores, String prefix) {
+			PriorityQueue<WordSim> kSimilarWords = new PriorityQueue<WordSim>(k);
+			for (Entry<String, float[]> e : this.entrySet()) {
+
+				if (!e.getKey().startsWith(prefix)) {
+					continue;
+				}
+
+				WordSim sim = new WordSim(e.getKey(), VectorMath.cosineSimilarity(vec, e.getValue()));
+
+				kSimilarWords.add(sim);
+
+			}
+			List<WordSim> col = new ArrayList<WordSim>();
+			//col.clear();
+
+			for (int i=0; i < k+1; i++  ) {
+				col.add(kSimilarWords.poll());		
+			}
+			return col;
+		}
+
+		public List<WordSim> knn(float[] vec, int k, boolean withScores, boolean prefix) {
+			PriorityQueue<WordSim> kSimilarWords = new PriorityQueue<WordSim>(k);
+			for (Entry<String, float[]> e : this.entrySet()) {
+
+				if (e.getKey().startsWith("@") || e.getKey().startsWith("#")) {
+					continue;
+				}
+
+				WordSim sim = new WordSim(e.getKey(), VectorMath.cosineSimilarity(vec, e.getValue()));
+				kSimilarWords.add(sim);
+			}
+			List<WordSim> col = new ArrayList<WordSim>();
+			//col.clear();
+			for (int i=0; i < k; i++  ) {
+				col.add(kSimilarWords.poll());		
+			}
+			return col;
+		}
+
+
+
+
+
+
+		// Debug / print:
+
+		public List<WordSim> knn(String word, int k, boolean debug) {
+			if (!this.contains(word)) {
+				System.err.println( "Out of vocab word: " + word );
+				return new ArrayList<WordSim>();
+			}
+
+			return knn(word, this.vector(word), k, true);
+
+		}	
+
+
+		/*
+		 * Test:
+		 */
+
+		public static void main(String[] args) {
+
+		}
+
+		/*
+		 * 
 	class ContextTest {
 
 	public static void main(String[] args) {
@@ -302,9 +305,9 @@ public class Word2Vec extends HashMap<String, float[]> implements WordVectorSpac
 
 }
 
-	 */
+		 */
 
-}
+	}
 
 
 

@@ -60,9 +60,7 @@ public class GloveTextModelLoader {
    */
   private static float[] readFloatVector(String[] line, int vectorSize) throws IOException {
     // Vector is an Array of Floats...
-
     float[] vector = new float[vectorSize - 1];
-
     // Vector:
     for (int j = 1; j < vectorSize; j++) {
       try {

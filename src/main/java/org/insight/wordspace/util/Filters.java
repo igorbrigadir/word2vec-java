@@ -30,6 +30,20 @@ public class Filters {
     return keep;
   }
 
+  /*
+   * Common filters:
+   */
+  public static WordFilter[] wordsOnly(WordFilter... moreFilters) {
+    WordFilter[] filters = new WordFilter[3 + moreFilters.length];
+    filters[0] = Filters.removeStopwords;
+    filters[1] = Filters.removeHashtags;
+    filters[2] = Filters.removeMentions;
+    int i = 3;
+    for (WordFilter f : moreFilters) {
+      filters[i++] = f;
+    }
+    return filters;
+  }
 
   public interface WordFilter {
     public boolean evaluate(String word);

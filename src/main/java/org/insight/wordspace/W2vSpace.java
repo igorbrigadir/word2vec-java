@@ -5,14 +5,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 
 import org.insight.wordspace.util.Filters;
 import org.insight.wordspace.util.VectorMath;
+import org.insight.wordspace.util.WordSim;
+import org.jblas.FloatMatrix;
 
 /*
  * A Java wrapper for W2v - Only Reads a pre trained model!
  */
-public class W2vSpace extends WordVectorSpace<float[]> {
+public class W2vSpace extends WordVectorSpace<FloatMatrix> {
 
   public static W2vSpace load(String word2vecModel) {
     W2vSpace model = new W2vSpace();
@@ -20,14 +23,13 @@ public class W2vSpace extends WordVectorSpace<float[]> {
       // Read header:
       int numWords = Integer.parseInt(readString(ds));
       int vecSize = Integer.parseInt(readString(ds));
-      // System.out.println(numWords + " Words, Vector size " + vecSize);
+      System.out.println(numWords + " Words, Vector size " + vecSize);
       for (int i = 0; i < numWords; i++) {
         // Word:
         String word = readString(ds);
-        // Vector:
-        float[] vector = readFloatVector(ds, vecSize);
         // Unit Vector
-        model.store.put(word, VectorMath.normalize(vector));
+        FloatMatrix f = new FloatMatrix(readFloatVector(ds, vecSize));
+        model.store.put(word, VectorMath.normalize(f));
       }
     } catch (IOException e) {
       System.err.println("ERROR: Failed to load model: " + word2vecModel);
@@ -153,111 +155,40 @@ public class W2vSpace extends WordVectorSpace<float[]> {
    * System.out.println(str); } }
    */
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws InterruptedException {
 
-    W2vSpace w2v = new W2vSpace();
+    for (int j = 0; j < 10; j++) {
 
-    // System.out.println(w2v.sentenceVector("@quick #brown fox and",
-    // Filters.removeMentions));
+      long startTime = System.nanoTime();
 
-    // System.out.println(w2v.sentenceVector("@quick #brown fox and",
-    // Filters.removeHashtags));
+      W2vSpace w2v =
+          W2vSpace
+              .load("/home/igor/git/word2vec-java/src/main/resources/w2v_text8_min_count-5_vector_size-50_iter-15_window-15_cbow-1_negative-25_hs-0_sample-1e4.bin");
 
-    // System.out.println(w2v.sentenceVector("@quick #brown fox and",
-    // Filters.removeHashtags, Filters.removeMentions));
+      List<WordSim> sims = w2v.knn(w2v.vector("democrats"), 10, Filters.wordsOnly(Filters.removeWords.with("democrat", "democrats")));
 
+      w2v.printSims("test ", sims);
 
-    // System.out.println(w2v.sentenceVector("@quick #brown fox and",
-    // Filters.removeStopwords));
+      long estimatedTime = System.nanoTime() - startTime;
+      float secs = estimatedTime / 1000000000.0F;
+      System.out.println("TOTAL EXECUTION TIME: " + secs);
 
-    System.out.println(w2v.sentenceVector("@quick #brown fox and foo", Filters.removeHashtags, Filters.removeMentions, Filters.removeStopwords));
-
-    System.out.println(w2v.sentenceVector("@quick #brown fox and foo", Filters.removeWords, Filters.removeHashtags, Filters.removeMentions,
-        Filters.removeStopwords));
-
-    System.out.println("rm'F:"
-        + w2v.sentenceVector("@quick #brown fox and foo", Filters.removeWords.with("fox"), Filters.removeHashtags, Filters.removeMentions,
-            Filters.removeStopwords));
-
-    System.out.println("inv*:"
-        + w2v.sentenceVector("@quick #brown fox and foo", Filters.invertRemove, Filters.removeHashtags, Filters.removeMentions, Filters.removeStopwords));
-
-    System.out.println("inv&:"
-        + w2v.sentenceVector("@quick #brown #yellow fox and foo", Filters.invertRemove.with("and", "#brown"), Filters.removeHashtags, Filters.removeMentions,
-            Filters.removeStopwords));
-
-
-
-    System.out.println();
-
-    /*
-     * for (int j = 0; j < 10; j++) {
-     * 
-     * long startTime = System.nanoTime();
-     * 
-     * W2vSpace w2v = W2VModelLoader.load(
-     * "/home/igor/git/word2vec-java/src/main/resources/vectors.bin");
-     * 
-     * long estimatedTime = System.nanoTime() - startTime; float secs =
-     * estimatedTime / 1000000000.0F; System.out.println("TOTAL Load TIME: " +
-     * secs);
-     * 
-     * 
-     * startTime = System.nanoTime();
-     * 
-     * int i = 100; for (String word : w2v.store.keySet()) { w2v.knn(word, 20);
-     * i--; if (i < 0) { break; } }
-     * 
-     * w2v.printSims("king", w2v.knn("king", 10)); w2v.printSims("queen",
-     * w2v.knn("queen", 10));
-     * 
-     * 
-     * estimatedTime = System.nanoTime() - startTime; secs = estimatedTime /
-     * 1000000000.0F; System.out.println("TOTAL EXECUTION TIME: " + secs);
-     */
+    }
   }
-  /*
-   * 
-   * W2vSpace w2v =
-   * W2VModelLoader.load("/home/igor/tmp/stream_w24_r15_v200_rsf_201311012345.bin"
-   * );
-   * 
-   * System.out.println("");
-   * 
-   * System.out.println("lax"); System.out.println("shooting");
-   * 
-   * float[] vec = new float[200];
-   * 
-   * //vec = VectorMath.plus(vec, w2v.vector("police")); //vec =
-   * VectorMath.plus(vec, w2v.vector("shooting")); //vec = VectorMath.plus(vec,
-   * w2v.vector("police")); //vec = VectorMath.plus(vec,
-   * w2v.vector("shooting"));
-   * 
-   * List<WordSim> sims = w2v.knn(vec, 100, true); for (WordSim sim : sims) {
-   * 
-   * System.out.println(sim.getString() + " - " + sim.getDouble());
-   * 
-   * }
-   * 
-   * System.out.println("");
-   * 
-   * 
-   * System.exit(0);
-   * 
-   * float[] result = VectorMath.multiply(w2v.vector("police"),
-   * w2v.vector("shooting"));
-   * 
-   * List<WordSim> aspects = w2v.knn(result, 100, true);
-   * 
-   * System.out.println("police * Shooting");
-   * 
-   * for (WordSim sim : aspects) {
-   * 
-   * System.out.println(sim.getString() + " - " + sim.getDouble());
-   * 
-   * } }
-   * 
-   * }
-   */
+
+  @Override
+  public double cosineSimilarity(FloatMatrix vec1, FloatMatrix vec2) {
+    return VectorMath.cosineSimilarity(vec1, vec2);
+  }
+
+  @Override
+  public double distanceSimilarity(FloatMatrix vec1, FloatMatrix vec2) {
+    return VectorMath.distanceSimilarity(vec1, vec2);
+  }
+
+  @Override
+  public FloatMatrix additiveSentenceVector(List<FloatMatrix> vectors) {
+    return VectorMath.addFloatMatrix(vectors);
+  }
 
 }

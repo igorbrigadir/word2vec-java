@@ -7,7 +7,7 @@ import org.insight.wordspace.util.Compression;
 /*
  * Random Indexing
  */
-public class RidxSpace extends WordVectorSpace<Integer[]> {
+public class RidxSpace extends GenericWordSpace<Integer[]> {
 
   public static float[] convertVector(int[] input, boolean decompress) {
     if (decompress) {

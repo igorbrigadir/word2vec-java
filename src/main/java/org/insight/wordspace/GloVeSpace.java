@@ -21,7 +21,7 @@ import org.jblas.DoubleMatrix;
 /*
  * A Java wrapper for GloVe - Only Reads a pre trained model!
  */
-public class GloVeSpace extends WordVectorSpace<DoubleMatrix> {
+public class GloVeSpace extends GenericWordSpace<DoubleMatrix> {
 
   /*
    * Read .txt or .txt.gz model:

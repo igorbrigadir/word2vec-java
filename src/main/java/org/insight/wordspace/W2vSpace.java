@@ -15,7 +15,7 @@ import org.jblas.FloatMatrix;
 /*
  * A Java wrapper for W2v - Only Reads a pre trained model!
  */
-public class W2vSpace extends WordVectorSpace<FloatMatrix> {
+public class W2vSpace extends GenericWordSpace<FloatMatrix> {
 
   public static W2vSpace load(String word2vecModel) {
     W2vSpace model = new W2vSpace();
@@ -23,7 +23,6 @@ public class W2vSpace extends WordVectorSpace<FloatMatrix> {
       // Read header:
       int numWords = Integer.parseInt(readString(ds));
       int vecSize = Integer.parseInt(readString(ds));
-      System.out.println(numWords + " Words, Vector size " + vecSize);
       for (int i = 0; i < numWords; i++) {
         // Word:
         String word = readString(ds);
@@ -31,6 +30,7 @@ public class W2vSpace extends WordVectorSpace<FloatMatrix> {
         FloatMatrix f = new FloatMatrix(readFloatVector(ds, vecSize));
         model.store.put(word, VectorMath.normalize(f));
       }
+      System.out.println(String.format("Loaded %s words, vector size %s", numWords, vecSize));
     } catch (IOException e) {
       System.err.println("ERROR: Failed to load model: " + word2vecModel);
       e.printStackTrace();
@@ -81,79 +81,6 @@ public class W2vSpace extends WordVectorSpace<FloatMatrix> {
     return vector;
   }
 
-  /*
-   * // Linear search k Nearest Neighbour: public List<String> knnWords(String
-   * word, int k) { if (!this.contains(word)) {
-   * System.err.println("Out of vocab word: " + word); return new
-   * ArrayList<String>(); }
-   * 
-   * List<WordSim> words = knn(word, k); List<String> ret = new
-   * ArrayList<String>(); for (WordSim w : words) { ret.add(w.getString()); }
-   * return ret; }
-   * 
-   * 
-   * public List<WordSim> knn(String word, int k) { return knn(word,
-   * vector(word), k); }
-   * 
-   * // Internal! but can be called to get similarities! public List<WordSim>
-   * knn(String word, float[] vec, int k) { PriorityQueue<WordSim> kSimilarWords
-   * = new PriorityQueue<WordSim>(k * 2);
-   * 
-   * for (Entry<String, float[]> e : store.entrySet()) { WordSim sim = new
-   * WordSim(e.getKey(), VectorMath.cosineSimilarity(vec, e.getValue()));
-   * kSimilarWords.add(sim); }
-   * 
-   * List<WordSim> col = new ArrayList<WordSim>(); // col.clear(); for (int i =
-   * 0; i < k; i++) { WordSim ws = kSimilarWords.poll(); if
-   * (!ws.getString().equalsIgnoreCase(word)) { col.add(ws); } } return col; }
-   */
-
-  // WITH PREFIX:
-  /*
-   * public List<WordSim> knn(String word, int k, String prefix) { if
-   * (!this.contains(word)) { System.err.println("Out of vocab word: " + word);
-   * return new ArrayList<WordSim>(); }
-   * 
-   * if (prefix.equalsIgnoreCase("none")) { return knn(this.vector(word), k,
-   * true); } else { return knn(this.vector(word), k, prefix); } }
-   */
-
-  /*
-   * public List<WordSim> knn(float[] vec, int k, boolean withScores, String
-   * prefix) { PriorityQueue<WordSim> kSimilarWords = new
-   * PriorityQueue<WordSim>(k); for (Entry<String, float[]> e :
-   * store.entrySet()) {
-   * 
-   * if (!e.getKey().startsWith(prefix)) { continue; }
-   * 
-   * WordSim sim = new WordSim(e.getKey(), VectorMath.cosineSimilarity(vec,
-   * e.getValue()));
-   * 
-   * kSimilarWords.add(sim);
-   * 
-   * } List<WordSim> col = new ArrayList<WordSim>(); // col.clear();
-   * 
-   * for (int i = 0; i < (k + 1); i++) { col.add(kSimilarWords.poll()); } return
-   * col; }
-   * 
-   * 
-   * 
-   * 
-   * public List<WordSim> knWords(float[] vec, int k) { PriorityQueue<WordSim>
-   * kSimilarWords = new PriorityQueue<WordSim>(k); for (Entry<String, float[]>
-   * e : store.entrySet()) {
-   * 
-   * if (e.getKey().startsWith("@") || e.getKey().startsWith("#")) { continue; }
-   * 
-   * WordSim sim = new WordSim(e.getKey(), VectorMath.cosineSimilarity(vec,
-   * e.getValue())); kSimilarWords.add(sim); } List<WordSim> col = new
-   * ArrayList<WordSim>(); for (int i = 0; i < k; i++) {
-   * col.add(kSimilarWords.poll()); } return col; }
-   * 
-   * void printSims(String w, List<WordSim> sims) { for (WordSim s : sims) {
-   * String str = String.format("%s %s %.4f", w, s.getString(), s.getDouble());
-   * System.out.println(str); } }
-   */
 
   public static void main(String[] args) throws InterruptedException {
 

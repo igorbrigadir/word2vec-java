@@ -1,11 +1,21 @@
 word2vec-java
 =============
 
-Java Utilities and Interfaces for working with wordspaces.
+Utilities for working with wordspaces.
 
 Load Pre Trained Vectors from:
-[*] word2vec: .bin
-[*] GloVe: .txt
-[ ] SSpace .sspace
+ - [x] word2vec
+ - [x] GloVe
+ - [ ] SSpace
 
+Tools:
 
+ - [x] k-Nearest Neighbours
+ - [x] Sentence vectors (additive)
+ - [ ] Wordspace comparison measures
+ - [ ] k-means Clustering
+ - [ ] t-SNE Viz
+ - [ ] Evaluations
+ - [ ] Text pre-processing
+ - [ ] Analogy (+/-, 3CosMul)
+ - [ ] Translation

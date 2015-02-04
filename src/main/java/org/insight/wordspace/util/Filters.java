@@ -31,7 +31,7 @@ public class Filters {
   }
 
   /*
-   * Common filters:
+   * Common filter:
    */
   public static WordFilter[] wordsOnly(WordFilter... moreFilters) {
     WordFilter[] filters = new WordFilter[3 + moreFilters.length];

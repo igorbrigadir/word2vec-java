@@ -55,5 +55,13 @@ public class VectorMath {
     return vec;
   }
 
+  public static DoubleMatrix addDoubleMatrix(DoubleMatrix... vectors) {
+    DoubleMatrix vec = vectors[0];
+    for (int i = 1; i < vectors.length; i++) {
+      vec.addi(vectors[i]);
+    }
+    return vec;
+  }
+
 
 }

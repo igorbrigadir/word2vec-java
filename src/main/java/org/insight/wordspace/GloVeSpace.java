@@ -1,116 +1,229 @@
 package org.insight.wordspace;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.io.FileUtils;
-import org.insight.wordspace.util.Filters;
+import org.apache.commons.lang3.StringUtils;
 import org.insight.wordspace.util.VectorMath;
 import org.insight.wordspace.util.WordSim;
 import org.jblas.DoubleMatrix;
 
 /*
- * A Java wrapper for W2v - Only Reads a pre trained model!
+ * A Java wrapper for GloVe - Only Reads a pre trained model!
  */
 public class GloVeSpace extends WordVectorSpace<DoubleMatrix> {
 
-  public static GloVeSpace load(String vocabFile, String gloVeModel, int vecSize, boolean withContexts, boolean bias) {
+  /*
+   * Read .txt or .txt.gz model:
+   */
+  public static GloVeSpace load(String gloVeModel) {
     GloVeSpace model = new GloVeSpace();
-    try (DataInputStream ds = new DataInputStream(new BufferedInputStream(new FileInputStream(gloVeModel), 131072))) {
 
-      List<String> vocab = FileUtils.readLines(new File(vocabFile));
-      long numWords = vocab.size();
+    try {
 
-      /*
-       * System.out.println(numWords + " Words, Vector size " + vecSize); for
-       * (int i = 0; i < numWords; i++) { // Word: String word = readString(ds);
-       * // Unit Vector DoubleMatrix f = new DoubleMatrix(readFloatVector(ds,
-       * vecSize)); model.store.put(word, VectorMath.normalize(f)); }
-       */
+      Reader decoder;
 
-      // vector size = num of bytes in total / 16 / vocab
-      // int vecSize = (int) (fs.getChannel().size() / 16 / (numWords - 1));
-
-      System.out.println(numWords + " Words with Vectors of size " + vecSize);
-
-      // wordvectors::
-      for (int i = 0; i < numWords; i++) { // 3= numwords
-        // Word:
-        String word = vocab.get(i).split(" ")[0];
-        // Vector:
-        float[] vector = bias ? readDoubleVector(ds, vecSize, true) : readFloatVector(ds, vecSize);
-        model.put(word, vector);
+      if (gloVeModel.endsWith("gz")) {
+        decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(gloVeModel)), "UTF-8");
+      } else {
+        decoder = new InputStreamReader(new FileInputStream(gloVeModel), "UTF-8");
       }
 
-      // context vecs:
-      if (withContexts) {
-        for (int i = 0; i < numWords; i++) { // 3= numwords
-          // Word:
-          String word = vocab.get(i).split(" ")[0];
-          // Vector:
-          float[] vector = bias ? readDoubleVector(ds, vecSize, true) : readFloatVector(ds, vecSize);
-          model.put(word, VectorMath.addAll(model.get(word), vector));
+      BufferedReader buffered = new BufferedReader(decoder);
+
+      long numWords = 0;
+
+      String line;
+      while ((line = buffered.readLine()) != null) {
+        // Split into words:
+        String[] wordvec = StringUtils.split(line, ' ');
+        if (wordvec.length < 2) {
+          break;
         }
+        double[] vec = readDoubleVector(wordvec);
+        model.store.put(wordvec[0], new DoubleMatrix(vec));
+        numWords++;
       }
+
+      decoder.close();
+      buffered.close();
+
+      int vecSize = model.store.entrySet().iterator().next().getValue().length;
+      System.out.println(String.format("Loaded %s words, vector size %s", numWords, vecSize));
 
     } catch (IOException e) {
       System.err.println("ERROR: Failed to load model: " + gloVeModel);
       e.printStackTrace();
     }
+
     return model;
   }
 
   /*
-   * Read a Vector - Array of Floats from the binary model:
+   * Equivalent to Text model: Contexts, no bias
    */
-  private static float[] readFloatVector(DataInputStream ds, int vectorSize) throws IOException {
-    // Vector is an Array of Floats...
-    float[] vector = new float[vectorSize];
-    // Vector:
+  public static GloVeSpace load(String vocabFile, String gloVeModel) {
+    return load(vocabFile, gloVeModel, true, false);
+  }
+
+  /*
+   * Read binary model, includes bias term, context vectors:
+   */
+  public static GloVeSpace load(String vocabFile, String gloVeModel, boolean withContexts, boolean bias) {
+    GloVeSpace model = new GloVeSpace();
+
+    try {
+
+      FileInputStream in = new FileInputStream(gloVeModel);
+      DataInputStream ds = new DataInputStream(new BufferedInputStream(in, 131072));
+
+      List<String> vocab = FileUtils.readLines(new File(vocabFile));
+      long numWords = vocab.size();
+
+      // Vector Size = num of bytes in total / 16 / vocab
+      int vecSize = (int) (in.getChannel().size() / 16 / numWords) - 1;
+
+      // Word Vectors:
+      for (int i = 0; i < numWords; i++) {
+        String word = StringUtils.split(vocab.get(i), ' ')[0];
+        double[] vector = readDoubleVector(ds, vecSize, bias);
+        model.store.put(word, new DoubleMatrix(vector));
+      }
+
+      // Context Vectors:
+      if (withContexts) {
+        for (int i = 0; i < numWords; i++) {
+          String word = StringUtils.split(vocab.get(i), ' ')[0];
+          double[] vector = readDoubleVector(ds, vecSize, bias);
+          model.store.put(word, VectorMath.addDoubleMatrix(model.store.get(word), new DoubleMatrix(vector)));
+        }
+      }
+
+      // Unit Vectors:
+      for (Entry<String, DoubleMatrix> e : model.store.entrySet()) {
+        model.store.put(e.getKey(), VectorMath.normalize(e.getValue()));
+      }
+
+      System.out.println(String.format("Loaded %s words, vector size %s", numWords, vecSize));
+
+    } catch (IOException e) {
+      System.err.println("ERROR: Failed to load model: " + gloVeModel);
+      e.printStackTrace();
+    }
+
+    return model;
+  }
+
+  /*
+   * Read a Vector - Array from text file:
+   */
+  private static double[] readDoubleVector(String[] line) throws IOException {
+    int vectorSize = line.length;
+    double[] vector = new double[vectorSize - 1];
+    for (int j = 1; j < vectorSize; j++) {
+      try {
+        double d = Double.parseDouble(line[j]);
+        vector[j - 1] = d;
+      } catch (NumberFormatException e) {
+        System.err.println("ERROR Parsing: " + line + " " + e.getMessage());
+        vector[j - 1] = 0.0f;
+      }
+    }
+    return vector;
+  }
+
+  /*
+   * Read a Vector - Array from binary file:
+   */
+  private static double[] readDoubleVector(DataInputStream ds, int vectorSize, boolean bias) throws IOException {
+    if (bias) {
+      vectorSize += 1; // Include Bias
+    }
+    double[] vector = new double[vectorSize];
     for (int j = 0; j < vectorSize; j++) {
       long l = ds.readLong();
       double d = Double.longBitsToDouble(Long.reverseBytes(l));
-      vector[j] = (float) d;
+      vector[j] = d;
     }
-    // Bias term:
-    ds.readLong();
-    return vector;
-  }
-
-  private static float[] readDoubleVector(DataInputStream ds, int vectorSize, boolean bias) throws IOException {
-    // Vector is an Array of Doubles...
-    float[] vector = new float[vectorSize + 1];
-    // Vector:
-    for (int j = 0; j < (vectorSize + 1); j++) {
-      long l = ds.readLong();
-      double d = Double.longBitsToDouble(Long.reverseBytes(l));
-      vector[j] = (float) d;
+    if (!bias) {
+      ds.readLong(); // Skip Bias
     }
     return vector;
   }
-
 
   public static void main(String[] args) throws InterruptedException {
 
-    for (int j = 0; j < 10; j++) {
+    for (int j = 0; j < 1; j++) {
 
-      long startTime = System.nanoTime();
+      long startTime, estimatedTime = 0L;
+      float secs = 0.0f;
 
-      GloVeSpace w2v =
-          GloVeSpace
-              .load("/home/igor/git/word2vec-java/src/main/resources/w2v_text8_min_count-5_vector_size-50_iter-15_window-15_cbow-1_negative-25_hs-0_sample-1e4.bin");
+      GloVeSpace mdl;
+      List<WordSim> sims;
 
-      List<WordSim> sims = w2v.knn(w2v.vector("democrats"), 10, Filters.wordsOnly(Filters.removeWords.with("democrat", "democrats")));
+      String vocab = "/home/igor/git/word2vec-java/src/main/resources/glove_text8_min_count-5_vector_size-50_iter-15_window-15.vocab.txt";
+      String bin = "/home/igor/git/word2vec-java/src/main/resources/glove_text8_min_count-5_vector_size-50_iter-15_window-15.bin";
 
-      w2v.printSims("test ", sims);
+      String tx = "/home/igor/git/word2vec-java/src/main/resources/glove_text8_min_count-5_vector_size-50_iter-15_window-15.txt";
+      String gz = "/home/igor/git/word2vec-java/src/main/resources/glove_text8_min_count-5_vector_size-50_iter-15_window-15.txt.gz";
 
-      long estimatedTime = System.nanoTime() - startTime;
-      float secs = estimatedTime / 1000000000.0F;
-      System.out.println("TOTAL EXECUTION TIME: " + secs);
+      startTime = System.nanoTime();
+      mdl = GloVeSpace.load(vocab, bin, true, true);
+      mdl.saveAsText(new File("/home/igor/git/word2vec-java/src/main/resources/g_cb"));
+
+      sims = mdl.knn(mdl.vector("democrats"), 10);
+      mdl.printSims("test ", sims);
+
+      estimatedTime = System.nanoTime() - startTime;
+      secs = estimatedTime / 1000000000.0F;
+      System.out.println("BIN cb LOAD TIME: " + secs);
+
+      startTime = System.nanoTime();
+      mdl = GloVeSpace.load(vocab, bin, true, false);
+      mdl.saveAsText(new File("/home/igor/git/word2vec-java/src/main/resources/g_c_"));
+
+      sims = mdl.knn(mdl.vector("democrats"), 10);
+      mdl.printSims("test ", sims);
+
+      estimatedTime = System.nanoTime() - startTime;
+      secs = estimatedTime / 1000000000.0F;
+      System.out.println("BIN c_ LOAD TIME: " + secs);
+
+      startTime = System.nanoTime();
+      mdl = GloVeSpace.load(vocab, bin, false, true);
+      mdl.saveAsText(new File("/home/igor/git/word2vec-java/src/main/resources/g__b"));
+
+      sims = mdl.knn(mdl.vector("democrats"), 10);
+      mdl.printSims("test ", sims);
+
+      estimatedTime = System.nanoTime() - startTime;
+      secs = estimatedTime / 1000000000.0F;
+      System.out.println("BIN _b LOAD TIME: " + secs);
+
+      startTime = System.nanoTime();
+      mdl = GloVeSpace.load(vocab, bin, false, false);
+      mdl.saveAsText(new File("/home/igor/git/word2vec-java/src/main/resources/g___"));
+
+      sims = mdl.knn(mdl.vector("democrats"), 10);
+      mdl.printSims("test ", sims);
+
+      estimatedTime = System.nanoTime() - startTime;
+      secs = estimatedTime / 1000000000.0F;
+      System.out.println("BIN __ LOAD TIME: " + secs);
+
+      // long estimatedTime = System.nanoTime() - startTime;
+      // float secs = estimatedTime / 1000000000.0F;
+      // System.out.println("TOTAL EXECUTION TIME: " + secs);
 
     }
   }

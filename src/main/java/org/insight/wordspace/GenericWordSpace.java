@@ -15,12 +15,16 @@ import org.insight.wordspace.util.Filters;
 import org.insight.wordspace.util.Filters.WordFilter;
 import org.insight.wordspace.util.WordSim;
 
-public abstract class GenericWordSpace<T> implements WordSpace {
+public abstract class GenericWordSpace<T> implements WordSpace<T> {
 
   /*
    * Store vectors & vocab in memory:
    */
   public Map<String, T> store = new HashMap<String, T>();
+
+  public boolean contains(String word) {
+    return store.containsKey(word);
+  }
 
   public T vector(String word) {
     return store.get(word);

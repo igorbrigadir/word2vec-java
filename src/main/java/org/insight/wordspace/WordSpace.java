@@ -5,7 +5,11 @@ import java.util.List;
 import org.insight.wordspace.util.Filters.WordFilter;
 import org.insight.wordspace.util.WordSim;
 
-public interface WordSpace {
+public interface WordSpace<T> {
+
+  public boolean contains(String word);
+
+  public T vector(String word);
 
   public double cosineSimilarity(String w1, String w2);
 

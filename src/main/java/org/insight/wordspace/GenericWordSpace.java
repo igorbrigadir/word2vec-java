@@ -22,10 +22,12 @@ public abstract class GenericWordSpace<T> implements WordSpace<T> {
    */
   public Map<String, T> store = new HashMap<String, T>();
 
+  @Override
   public boolean contains(String word) {
     return store.containsKey(word);
   }
 
+  @Override
   public T vector(String word) {
     return store.get(word);
   }
@@ -47,6 +49,7 @@ public abstract class GenericWordSpace<T> implements WordSpace<T> {
   /*
    * Linear search for k Nearest Neighbours of a vector:
    */
+  @Override
   public List<WordSim> knn(T vec, int k, WordFilter... filters) {
     PriorityQueue<WordSim> kSimilarWords = new PriorityQueue<WordSim>(k * 2);
 
@@ -77,6 +80,7 @@ public abstract class GenericWordSpace<T> implements WordSpace<T> {
     return knnWords(vector(word), k, filters);
   }
 
+  @Override
   public List<String> knnWords(T vec, int k, WordFilter... filters) {
     List<WordSim> sims = knn(vec, k, filters);
     List<String> words = new ArrayList<String>();
@@ -89,10 +93,12 @@ public abstract class GenericWordSpace<T> implements WordSpace<T> {
   /*
    * Additive representation of several words:
    */
+  @Override
   public T sentenceVector(String sentence) {
     return sentenceVector(sentence, Filters.removeStopwords);
   }
 
+  @Override
   public T sentenceVector(String sentence, WordFilter... filters) {
     List<T> vectors = new ArrayList<T>();
     for (String word : StringUtils.split(sentence, ' ')) {
@@ -103,6 +109,7 @@ public abstract class GenericWordSpace<T> implements WordSpace<T> {
     return additiveSentenceVector(vectors);
   }
 
+  @Override
   public abstract T additiveSentenceVector(List<T> vectors);
 
   /*

@@ -14,6 +14,28 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class Filters {
 
+  public static WordFilter removePrefix = new Filters.PrefixFilter();
+
+  public static WordFilter removeHashtags = new Filters.PrefixFilter().with("#");
+
+  public static WordFilter removeMentions = new Filters.PrefixFilter().with("@");
+
+  public static WordFilter removeWords = new Filters.RemoveWords();
+
+  /*
+   * Remove default nltk + twitter stopwords
+   */
+  public static WordFilter removeStopwords = new Filters.RemoveWords() {
+    {
+      try (InputStream in = this.getClass().getResourceAsStream("/stopwords.txt")) {
+        String text = IOUtils.toString(in, "UTF-8");
+        remove.addAll(Arrays.asList(StringUtils.split(text, ' ')));
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+  };
+
   /*
    * Apply filters to words:
    */
@@ -23,9 +45,12 @@ public class Filters {
 
   public static boolean apply(String word, WordFilter... filters) {
     boolean keep = true;
+    //Remove Duplicate Filters:
+    Set<WordFilter> applyFilters = new HashSet<WordFilter>(Arrays.asList(filters));
     // XOR Results:
-    for (WordFilter f : filters) {
+    for (WordFilter f : applyFilters) {
       keep = keep ^ f.evaluate(word);
+      // System.out.println("Eval: " + word + " " + f.evaluate(word) + " still keep? " + keep);
     }
     return keep;
   }
@@ -54,9 +79,9 @@ public class Filters {
   }
 
   /*
-   * By Default, don't need to init() filters, and treat WordSim as String:
+   * Default: treat WordSim as String:
    */
-  public static abstract class DefaultFilter implements WordFilter {
+  private static abstract class DefaultFilter implements WordFilter {
     @Override
     public abstract boolean evaluate(String word);
 
@@ -74,7 +99,7 @@ public class Filters {
   /*
    * Remove words specified with init(...)
    */
-  public static class RemoveWords extends DefaultFilter {
+  private static class RemoveWords extends DefaultFilter {
     public Set<String> remove = new HashSet<String>();
 
     @Override
@@ -89,29 +114,13 @@ public class Filters {
     }
   }
 
-  /*
-   * RemoveWords with WordFilter interface:
-   */
-  public static WordFilter removeWords = new Filters.RemoveWords();
 
-  /*
-   * Remove default nltk + twitter stopwords
-   */
-  public static WordFilter removeStopwords = new Filters.RemoveWords() {
-    {
-      try (InputStream in = this.getClass().getResourceAsStream("/stopwords.txt")) {
-        String text = IOUtils.toString(in, "UTF-8");
-        remove.addAll(Arrays.asList(StringUtils.split(text, ' ')));
-      } catch (IOException e) {
-      }
-    }
-  };
 
   /*
    * Useful to add if you want to keep a word that gets filtered.
-   * 
+   *
    * Invert removal of specific words: Filters.invert.init("is", "#is")
-   * 
+   *
    * Invert ALL removals from all other filters: Filters.invert
    */
   public static WordFilter invertRemove = new Filters.DefaultFilter() {
@@ -133,24 +142,25 @@ public class Filters {
     }
   };
 
-  /*
-   * Remove #hashtags
-   */
-  public static WordFilter removeHashtags = new Filters.DefaultFilter() {
-    @Override
-    public boolean evaluate(String word) {
-      return word.startsWith("#");
-    }
-  };
 
-  /*
-   * Remove @mentions
-   */
-  public static WordFilter removeMentions = new Filters.DefaultFilter() {
+  private static class PrefixFilter extends DefaultFilter {
+    private String[] pref = new String[0];
+
     @Override
     public boolean evaluate(String word) {
-      return word.startsWith("@");
+      for (String p : pref) {
+        return word.startsWith(p);
+      }
+      return false;
     }
-  };
+
+    @Override
+    public WordFilter with(String... words) {
+      this.pref = words;
+      return this;
+    }
+  }
+
+
 
 }

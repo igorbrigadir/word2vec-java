@@ -119,7 +119,7 @@ public class Filters {
   /*
    * Useful to add if you want to keep a word that gets filtered.
    *
-   * Invert removal of specific words: Filters.invert.init("is", "#is")
+   * Invert removal of specific words: Filters.invert.with("is", "#is")
    *
    * Invert ALL removals from all other filters: Filters.invert
    */

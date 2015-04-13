@@ -14,20 +14,18 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class Filters {
 
-  public static WordFilter removePrefix = new Filters.PrefixFilter();
+  public WordFilter removeHashtags = (new PrefixFilter()).with("#");
 
-  public static WordFilter removeHashtags = new Filters.PrefixFilter().with("#");
+  public WordFilter removeMentions = (new PrefixFilter()).with("@");
 
-  public static WordFilter removeMentions = new Filters.PrefixFilter().with("@");
-
-  public static WordFilter removeWords = new Filters.RemoveWords();
+  public WordFilter removeWords = new RemoveWords();
 
   /*
    * Remove default nltk + twitter stopwords
    */
-  public static WordFilter removeStopwords = new Filters.RemoveWords() {
+  public WordFilter removeStopwords = new RemoveWords() {
     {
-      try (InputStream in = this.getClass().getResourceAsStream("/stopwords.txt")) {
+      try (InputStream in = this.getClass().getResourceAsStream("/nltk_en_stopwords.txt")) {
         String text = IOUtils.toString(in, "UTF-8");
         remove.addAll(Arrays.asList(StringUtils.split(text, ' ')));
       } catch (IOException e) {
@@ -35,6 +33,21 @@ public class Filters {
       }
     }
   };
+
+  /*
+   * Common filter:
+   */
+  public WordFilter[] wordsOnly(WordFilter... moreFilters) {
+    WordFilter[] filters = new WordFilter[3 + moreFilters.length];
+    filters[0] = removeStopwords;
+    filters[1] = removeHashtags;
+    filters[2] = removeMentions;
+    int i = 3;
+    for (WordFilter f : moreFilters) {
+      filters[i++] = f;
+    }
+    return filters;
+  }
 
   /*
    * Apply filters to words:
@@ -46,28 +59,13 @@ public class Filters {
   public static boolean apply(String word, WordFilter... filters) {
     boolean keep = true;
     //Remove Duplicate Filters:
-    Set<WordFilter> applyFilters = new HashSet<WordFilter>(Arrays.asList(filters));
+    final Set<WordFilter> applyFilters = new HashSet<WordFilter>(Arrays.asList(filters));
     // XOR Results:
     for (WordFilter f : applyFilters) {
       keep = keep ^ f.evaluate(word);
       // System.out.println("Eval: " + word + " " + f.evaluate(word) + " still keep? " + keep);
     }
     return keep;
-  }
-
-  /*
-   * Common filter:
-   */
-  public static WordFilter[] wordsOnly(WordFilter... moreFilters) {
-    WordFilter[] filters = new WordFilter[3 + moreFilters.length];
-    filters[0] = Filters.removeStopwords;
-    filters[1] = Filters.removeHashtags;
-    filters[2] = Filters.removeMentions;
-    int i = 3;
-    for (WordFilter f : moreFilters) {
-      filters[i++] = f;
-    }
-    return filters;
   }
 
   public interface WordFilter {
@@ -81,7 +79,7 @@ public class Filters {
   /*
    * Default: treat WordSim as String:
    */
-  private static abstract class DefaultFilter implements WordFilter {
+  private abstract class DefaultFilter implements WordFilter {
     @Override
     public abstract boolean evaluate(String word);
 
@@ -99,8 +97,12 @@ public class Filters {
   /*
    * Remove words specified with init(...)
    */
-  private static class RemoveWords extends DefaultFilter {
-    public Set<String> remove = new HashSet<String>();
+  private class RemoveWords extends DefaultFilter {
+    Set<String> remove;
+
+    public RemoveWords() {
+      remove = new HashSet<String>();
+    }
 
     @Override
     public boolean evaluate(String word) {
@@ -114,8 +116,6 @@ public class Filters {
     }
   }
 
-
-
   /*
    * Useful to add if you want to keep a word that gets filtered.
    *
@@ -123,7 +123,7 @@ public class Filters {
    *
    * Invert ALL removals from all other filters: Filters.invert
    */
-  public static WordFilter invertRemove = new Filters.DefaultFilter() {
+  public WordFilter invertRemove = new DefaultFilter() {
     Set<String> keep = new HashSet<String>();
 
     @Override
@@ -134,17 +134,10 @@ public class Filters {
         return !keep.contains(word);
       }
     }
-
-    @Override
-    public WordFilter with(String... words) {
-      keep.addAll(Arrays.asList(words));
-      return this;
-    }
   };
 
-
-  private static class PrefixFilter extends DefaultFilter {
-    private String[] pref = new String[0];
+  private class PrefixFilter extends DefaultFilter {
+    String[] pref = new String[0];
 
     @Override
     public boolean evaluate(String word) {
@@ -155,12 +148,9 @@ public class Filters {
     }
 
     @Override
-    public WordFilter with(String... words) {
-      this.pref = words;
+    public WordFilter with(String... pref) {
+      this.pref = pref;
       return this;
     }
   }
-
-
-
 }

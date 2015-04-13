@@ -17,6 +17,7 @@ import org.insight.wordspace.util.WordSim;
 
 public abstract class GenericWordSpace<T> implements WordSpace<T> {
 
+  public Filters f = new Filters();
   /*
    * Store vectors & vocab in memory:
    */
@@ -95,7 +96,7 @@ public abstract class GenericWordSpace<T> implements WordSpace<T> {
    */
   @Override
   public T sentenceVector(String sentence) {
-    return sentenceVector(sentence, Filters.removeStopwords);
+    return sentenceVector(sentence, f.removeStopwords);
   }
 
   @Override

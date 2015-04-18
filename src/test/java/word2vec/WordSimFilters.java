@@ -13,7 +13,7 @@ import org.junit.Test;
 
 public class WordSimFilters {
 
-  static Filters f = new Filters();
+  Filters f = new Filters();
 
   @Test
   public void testStopwordFilter() {

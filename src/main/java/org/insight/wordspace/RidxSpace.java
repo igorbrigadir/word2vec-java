@@ -2,14 +2,13 @@ package org.insight.wordspace;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.apache.commons.math3.ml.distance.EuclideanDistance;
 import org.insight.wordspace.util.Compression;
 import org.insight.wordspace.util.VectorMath;
-import org.jblas.DoubleMatrix;
 import org.jblas.FloatMatrix;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -68,39 +67,37 @@ public class RidxSpace extends GenericWordSpace<int[]> {
 
   @Override
   public double cosineSimilarity(int[] vec1, int[] vec2) {
-    DoubleMatrix d1 = new DoubleMatrix(copyFromIntArray(vec1));
-    DoubleMatrix d2 = new DoubleMatrix(copyFromIntArray(vec2));
+
+    FloatMatrix d1 = new FloatMatrix(copyFromIntArray(vec1));
+    FloatMatrix d2 = new FloatMatrix(copyFromIntArray(vec2));
 
     d1 = VectorMath.normalize(d1);
     d2 = VectorMath.normalize(d2);
 
     return VectorMath.cosineSimilarity(d1, d2);
+
   }
 
 
   @Override
   public double distanceSimilarity(int[] vec1, int[] vec2) {
-    EuclideanDistance e = new EuclideanDistance();
-    return e.compute(copyFromIntArray(vec1), copyFromIntArray(vec2));
+    //EuclideanDistance e = new EuclideanDistance();
+    //return e.compute(copyFromIntArray(vec1), copyFromIntArray(vec2));
+    return 0;
   }
 
 
   @Override
   public int[] additiveSentenceVector(List<int[]> vectors) {
-
-    int[] ret = new int[vectorSize];
-
-    for (int[] vec : vectors) {
-      // todo
+    int[] result = new int[vectorSize];
+    for (int[] v : vectors) {
+      Arrays.parallelSetAll(result, i -> result[i] + v[i]);
     }
-
-    return ret;
-
+    return result;
   }
 
-
-  public static double[] copyFromIntArray(int[] source) {
-    double[] dest = new double[source.length];
+  public static float[] copyFromIntArray(int[] source) {
+    float[] dest = new float[source.length];
     for (int i = 0; i < source.length; i++) {
       dest[i] = source[i];
     }

@@ -53,14 +53,12 @@ public abstract class GenericWordSpace<T> implements WordSpace<T> {
   @Override
   public List<WordSim> knn(T vec, int k, WordFilter... filters) {
     PriorityQueue<WordSim> kSimilarWords = new PriorityQueue<WordSim>(k * 2);
-
     for (Entry<String, T> e : store.entrySet()) {
       if (Filters.apply(e.getKey(), filters)) {
         double dot = cosineSimilarity(vec, e.getValue());
         kSimilarWords.add(new WordSim(e.getKey(), dot));
       }
     }
-
     List<WordSim> col = new ArrayList<WordSim>();
     for (int i = 0; i < k; i++) {
       WordSim ws = kSimilarWords.poll();
@@ -142,6 +140,5 @@ public abstract class GenericWordSpace<T> implements WordSpace<T> {
     }
     return true;
   }
-
 
 }

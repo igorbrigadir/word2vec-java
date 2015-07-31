@@ -1,13 +1,19 @@
 package org.insight.wordspace;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.insight.wordspace.util.VectorMath;
+import org.jblas.DoubleMatrix;
 import org.jblas.FloatMatrix;
 
 /*
@@ -15,6 +21,54 @@ import org.jblas.FloatMatrix;
  */
 public class W2vSpace extends GenericWordSpace<FloatMatrix> {
 
+	public static W2vSpace loadText(String word2vecModel) {
+		W2vSpace model = new W2vSpace();
+		 try (BufferedReader r = new BufferedReader(new InputStreamReader(new BufferedInputStream(new FileInputStream(word2vecModel), 131072), StandardCharsets.UTF_8));
+) {
+		      long numWords = 0;
+		      String line;
+		      while ((line = r.readLine()) != null) {
+		        // Split into words:
+		        String[] wordvec = StringUtils.split(line, ' ');
+		        if (wordvec.length < 2) {
+		          break;
+		        }
+		        float[] vec = readFloatVector(wordvec);
+		        model.store.put(wordvec[0], VectorMath.normalize(new FloatMatrix(vec)));
+		        numWords++;
+		      }
+		      int vecSize = model.store.entrySet().iterator().next().getValue().length;
+		      System.out.println(String.format("Loaded %s words, vector size %s", numWords, vecSize));
+		 } catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		 return model;
+}
+	
+	
+	  /*
+	   * Read a Vector - Array from text file:
+	   */
+	  private static float[] readFloatVector(String[] line) throws IOException {
+	    int vectorSize = line.length;
+	    float[] vector = new float[vectorSize - 1];
+	    for (int j = 1; j < vectorSize; j++) {
+	      try {
+	        float d = Float.parseFloat(line[j]);
+	        vector[j - 1] = d;
+	      } catch (NumberFormatException e) {
+	        System.err.println("ERROR Parsing: " + line + " " + e.getMessage());
+	        vector[j - 1] = 0.0f;
+	      }
+	    }
+	    return vector;
+	  }
+	
+	
   public static W2vSpace load(String word2vecModel) {
     W2vSpace model = new W2vSpace();
     try (DataInputStream ds = new DataInputStream(new BufferedInputStream(new FileInputStream(word2vecModel), 131072))) {

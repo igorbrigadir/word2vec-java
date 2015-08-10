@@ -13,6 +13,13 @@ import org.apache.commons.lang3.StringUtils;
  * Apply Various Filters to words:
  */
 public class Filters {
+	
+	  public WordFilter ccomp = (new PrefixFilter()).with("ccomp");
+	  public WordFilter nsubj = (new PrefixFilter()).with("nsubj");
+	  public WordFilter agent = (new PrefixFilter()).with("agent");
+	  public WordFilter advcl = (new PrefixFilter()).with("advcl");
+
+	
 
   public WordFilter removeHashtags = (new PrefixFilter()).with("#");
 
@@ -136,7 +143,7 @@ public class Filters {
     }
   };
 
-  private class PrefixFilter extends DefaultFilter {
+  public class PrefixFilter extends DefaultFilter {
     String[] pref = new String[0];
 
     @Override

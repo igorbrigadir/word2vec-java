@@ -3,6 +3,7 @@ package org.insight.wordspace.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,11 +23,13 @@ public class Filters {
 	
 
   public WordFilter removeHashtags = (new PrefixFilter()).with("#");
-
   public WordFilter removeMentions = (new PrefixFilter()).with("@");
 
   public WordFilter removeWords = new RemoveWords();
 
+  public WordFilter removeShort = new RemoveShortWords();
+
+  
   /*
    * Remove default nltk + twitter stopwords
    */
@@ -40,6 +43,17 @@ public class Filters {
       }
     }
   };
+  
+  public WordFilter removeShortWords = new RemoveWords() {
+	    {
+	      try (InputStream in = this.getClass().getResourceAsStream("/nltk_en_stopwords.txt")) {
+	        String text = IOUtils.toString(in, "UTF-8");
+	        remove.addAll(Arrays.asList(StringUtils.split(text, ' ')));
+	      } catch (IOException e) {
+	        e.printStackTrace();
+	      }
+	    }
+	  };
 
   /*
    * Common filter:
@@ -81,6 +95,8 @@ public class Filters {
     public boolean evaluate(WordSim wordSim);
 
     public WordFilter with(String... words);
+    
+    public WordFilter with(Collection<String> words);
   }
 
   /*
@@ -121,7 +137,29 @@ public class Filters {
       remove.addAll(Arrays.asList(words));
       return this;
     }
+	@Override
+	public WordFilter with(Collection<String> words) {
+		remove.addAll(words);
+		return this;
+	}
   }
+  
+  private class RemoveShortWords extends DefaultFilter {
+	    public RemoveShortWords() {
+	    }
+
+	    @Override
+	    public boolean evaluate(String word) {
+	      return (word.length() < 3);
+	    }
+
+		@Override
+		public WordFilter with(Collection<String> words) {
+			return this;
+		}
+
+	  }  
+  
 
   /*
    * Useful to add if you want to keep a word that gets filtered.
@@ -141,6 +179,11 @@ public class Filters {
         return !keep.contains(word);
       }
     }
+
+	@Override
+	public WordFilter with(Collection<String> words) {
+		return this;
+	}
   };
 
   public class PrefixFilter extends DefaultFilter {
@@ -159,5 +202,10 @@ public class Filters {
       this.pref = pref;
       return this;
     }
+
+	@Override
+	public WordFilter with(Collection<String> words) {
+		return this;
+	}
   }
 }

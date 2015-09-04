@@ -101,7 +101,7 @@ public abstract class GenericWordSpace<T> implements WordSpace<T> {
   public T sentenceVector(String sentence, WordFilter... filters) {
     List<T> vectors = new ArrayList<T>();
     for (String word : StringUtils.split(sentence, ' ')) {
-      if (Filters.apply(word, filters)) {
+      if (Filters.apply(word, filters) && contains(word)) {
         vectors.add(vector(word));
       }
     }

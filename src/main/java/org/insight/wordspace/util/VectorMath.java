@@ -18,6 +18,10 @@ public class VectorMath {
     return vec1.dot(vec2);
   }
 
+  public static double distance(FloatMatrix vec1, final FloatMatrix vec2) {
+    return vec1.distance2(vec2);
+  }
+
   public static double distanceSimilarity(FloatMatrix vec1, final FloatMatrix vec2) {
     return 1 / (1 + vec1.distance2(vec2));
   }

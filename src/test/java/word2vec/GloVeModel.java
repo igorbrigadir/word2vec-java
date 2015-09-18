@@ -14,13 +14,13 @@ public class GloVeModel {
     String gz = "/home/igor/git/word2vec-java/src/test/resources/glove_text8_min_count-5_vector_size-50_iter-15_window-15.txt.gz";
 
     // c = load context vestors, b = bias term
-    timeBin(GloVeSpace.load(vocab, bin, true, true), "cb");
-    timeBin(GloVeSpace.load(vocab, bin, true, false), "c_");
-    timeBin(GloVeSpace.load(vocab, bin, false, true), "_b");
-    timeBin(GloVeSpace.load(vocab, bin, false, false), "__");
+    timeBin(GloVeSpace.load(vocab, bin, true, true, true), "cb");
+    timeBin(GloVeSpace.load(vocab, bin, true, false, true), "c_");
+    timeBin(GloVeSpace.load(vocab, bin, false, true, true), "_b");
+    timeBin(GloVeSpace.load(vocab, bin, false, false, true), "__");
 
-    timeBin(GloVeSpace.load(tx), "tx");
-    timeBin(GloVeSpace.load(gz), "gz");
+    timeBin(GloVeSpace.load(tx, true, true), "tx");
+    timeBin(GloVeSpace.load(gz, true, true), "gz");
   }
 
   public static void timeBin(GloVeSpace mdl, String msg) {

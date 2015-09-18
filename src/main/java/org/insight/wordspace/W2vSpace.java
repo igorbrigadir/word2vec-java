@@ -24,8 +24,6 @@ public class W2vSpace extends GenericWordSpace<FloatMatrix> {
   /*
    * Load vectors from a text file - 1 word per line.
    */
-
-	
   public static W2vSpace loadText(String word2vecModel) {
     return loadText(word2vecModel, true, false);
   }
@@ -40,14 +38,15 @@ public class W2vSpace extends GenericWordSpace<FloatMatrix> {
         decoder = new InputStreamReader(new FileInputStream(word2vecModel), "UTF-8");
       }
       BufferedReader r = new BufferedReader(decoder);
+
       long numWords = 0;
       String line;
-      
+
       if (header) {
-    	  String h = r.readLine();
-    	  //System.out.println(h);
+        String h = r.readLine();
+        System.out.println(h);
       }
-      
+
       while ((line = r.readLine()) != null) {
         // Split into words:
         String[] wordvec = StringUtils.split(line, ' ');
@@ -55,17 +54,15 @@ public class W2vSpace extends GenericWordSpace<FloatMatrix> {
           break;
         }
         float[] vec = readFloatVector(wordvec);
-
         if (norm) {
           model.store.put(wordvec[0], VectorMath.normalize(new FloatMatrix(vec)));
         } else {
           model.store.put(wordvec[0], new FloatMatrix(vec));
         }
-
         numWords++;
       }
       int vecSize = model.store.entrySet().iterator().next().getValue().length;
-      //System.out.println(String.format("Loaded %s words, vector size %s", numWords, vecSize));
+      System.out.println(String.format(word2vecModel + " Loaded %s words, vector size %s", numWords, vecSize));
     } catch (FileNotFoundException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -98,6 +95,10 @@ public class W2vSpace extends GenericWordSpace<FloatMatrix> {
    * Load vectors from w2v C binary file
    */
   public static W2vSpace load(String word2vecModel) {
+    return load(word2vecModel, true);
+  }
+
+  public static W2vSpace load(String word2vecModel, boolean norm) {
     W2vSpace model = new W2vSpace();
     try (DataInputStream ds = new DataInputStream(new BufferedInputStream(new FileInputStream(word2vecModel), 131072))) {
       // Read header:
@@ -108,7 +109,10 @@ public class W2vSpace extends GenericWordSpace<FloatMatrix> {
         String word = readString(ds);
         // Unit Vector
         FloatMatrix f = new FloatMatrix(readFloatVector(ds, vecSize));
-        model.store.put(word, VectorMath.normalize(f));
+        if (norm) {
+          f = VectorMath.normalize(f);
+        }
+        model.store.put(word, f);
       }
       //System.out.println(String.format("Loaded %s words, vector size %s", numWords, vecSize));
     } catch (IOException e) {
@@ -173,7 +177,7 @@ public class W2vSpace extends GenericWordSpace<FloatMatrix> {
 
   @Override
   public FloatMatrix additiveSentenceVector(List<FloatMatrix> vectors) {
-//    return VectorMath.addFloatMatrix(vectors);
+    //    return VectorMath.addFloatMatrix(vectors);
     return VectorMath.normalize(VectorMath.addFloatMatrix(vectors));
 
   }

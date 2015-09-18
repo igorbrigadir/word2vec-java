@@ -44,6 +44,9 @@ public class VectorMath {
 
 
   public static FloatMatrix addFloatMatrix(List<FloatMatrix> vectors) {
+    if (vectors.size() < 1) {
+      return null;
+    }
     FloatMatrix vec = vectors.remove(0);
     for (FloatMatrix f : vectors) {
       vec.addi(f);
@@ -52,6 +55,9 @@ public class VectorMath {
   }
 
   public static DoubleMatrix addDoubleMatrix(List<DoubleMatrix> vectors) {
+    if (vectors.size() < 1) {
+      return null;
+    }
     DoubleMatrix vec = vectors.remove(0);
     for (DoubleMatrix d : vectors) {
       vec.addi(d);
@@ -59,12 +65,11 @@ public class VectorMath {
     return vec;
   }
 
-  public static DoubleMatrix addDoubleMatrix(DoubleMatrix... vectors) {
-    DoubleMatrix vec = vectors[0];
-    for (int i = 1; i < vectors.length; i++) {
-      vec.addi(vectors[i]);
-    }
-    return vec;
+  /*
+   * Only used by GloveModelLoader
+   */
+  public static DoubleMatrix addDoubleMatrix(DoubleMatrix vector1, DoubleMatrix vector2) {
+    return vector1.addi(vector2);
   }
 
 

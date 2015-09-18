@@ -25,7 +25,7 @@ public class GloVeSpace extends GenericWordSpace<DoubleMatrix> {
   /*
    * Read .txt or .txt.gz model:
    */
-  public static GloVeSpace load(String gloVeModel) {
+  public static GloVeSpace load(String gloVeModel, boolean norm, boolean header) {
     GloVeSpace model = new GloVeSpace();
     try {
       Reader decoder;
@@ -34,21 +34,32 @@ public class GloVeSpace extends GenericWordSpace<DoubleMatrix> {
       } else {
         decoder = new InputStreamReader(new FileInputStream(gloVeModel), "UTF-8");
       }
-      BufferedReader buffered = new BufferedReader(decoder);
+      BufferedReader r = new BufferedReader(decoder);
+
       long numWords = 0;
       String line;
-      while ((line = buffered.readLine()) != null) {
+
+      if (header) {
+        String h = r.readLine();
+        System.out.println(h);
+      }
+
+      while ((line = r.readLine()) != null) {
         // Split into words:
         String[] wordvec = StringUtils.split(line, ' ');
         if (wordvec.length < 2) {
           break;
         }
         double[] vec = readDoubleVector(wordvec);
-        model.store.put(wordvec[0], new DoubleMatrix(vec));
+        if (norm) {
+          model.store.put(wordvec[0], VectorMath.normalize(new DoubleMatrix(vec)));
+        } else {
+          model.store.put(wordvec[0], new DoubleMatrix(vec));
+        }
         numWords++;
       }
       decoder.close();
-      buffered.close();
+      r.close();
       int vecSize = model.store.entrySet().iterator().next().getValue().length;
       System.out.println(String.format("Loaded %s words, vector size %s", numWords, vecSize));
 
@@ -60,16 +71,16 @@ public class GloVeSpace extends GenericWordSpace<DoubleMatrix> {
   }
 
   /*
-   * Equivalent to Text model: With Contexts, no bias
+   * Equivalent to Text model: With Contexts, no bias. norm = unit vector
    */
-  public static GloVeSpace load(String vocabFile, String gloVeModel) {
-    return load(vocabFile, gloVeModel, true, false);
+  public static GloVeSpace load(String vocabFile, String gloVeModel, boolean norm) {
+    return load(vocabFile, gloVeModel, true, false, norm);
   }
 
   /*
    * Read binary model, includes bias term, context vectors:
    */
-  public static GloVeSpace load(String vocabFile, String gloVeModel, boolean withContexts, boolean bias) {
+  public static GloVeSpace load(String vocabFile, String gloVeModel, boolean withContexts, boolean bias, boolean norm) {
     GloVeSpace model = new GloVeSpace();
     try {
       FileInputStream in = new FileInputStream(gloVeModel);
@@ -93,8 +104,10 @@ public class GloVeSpace extends GenericWordSpace<DoubleMatrix> {
         }
       }
       // Unit Vectors:
-      for (Entry<String, DoubleMatrix> e : model.store.entrySet()) {
-        model.store.put(e.getKey(), VectorMath.normalize(e.getValue()));
+      if (norm) {
+        for (Entry<String, DoubleMatrix> e : model.store.entrySet()) {
+          model.store.put(e.getKey(), VectorMath.normalize(e.getValue()));
+        }
       }
       System.out.println(String.format("Loaded %s words, vector size %s", numWords, vecSize));
     } catch (IOException e) {
@@ -116,7 +129,7 @@ public class GloVeSpace extends GenericWordSpace<DoubleMatrix> {
         vector[j - 1] = d;
       } catch (NumberFormatException e) {
         System.err.println("ERROR Parsing: " + line + " " + e.getMessage());
-        vector[j - 1] = 0.0f;
+        vector[j - 1] = 0.0D;
       }
     }
     return vector;

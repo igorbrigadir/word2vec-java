@@ -56,7 +56,29 @@ public abstract class GenericWordSpace<T> implements WordSpace<T> {
     for (Entry<String, T> e : store.entrySet()) {
       if (Filters.apply(e.getKey(), filters)) {
         double dot = cosineSimilarity(vec, e.getValue());
-        kSimilarWords.add(new WordSim(e.getKey(), dot));
+        if (Double.isFinite(dot)) {
+          kSimilarWords.add(new WordSim(e.getKey(), dot));
+        }
+      }
+    }
+    List<WordSim> col = new ArrayList<WordSim>();
+    for (int i = 0; i < k; i++) {
+      WordSim ws = kSimilarWords.poll();
+      if (ws != null) {
+        col.add(ws);
+      }
+    }
+    return col;
+  }
+
+  public List<WordSim> dist_knn(T vec, int k, WordFilter... filters) {
+    PriorityQueue<WordSim> kSimilarWords = new PriorityQueue<WordSim>(k * 2);
+    for (Entry<String, T> e : store.entrySet()) {
+      if (Filters.apply(e.getKey(), filters)) {
+        double dot = distanceSimilarity(vec, e.getValue());
+        if (Double.isFinite(dot)) {
+          kSimilarWords.add(new WordSim(e.getKey(), dot));
+        }
       }
     }
     List<WordSim> col = new ArrayList<WordSim>();

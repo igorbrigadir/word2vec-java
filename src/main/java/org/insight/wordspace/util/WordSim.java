@@ -26,7 +26,7 @@ public class WordSim implements Comparable<WordSim> {
 
   @Override
   public String toString() {
-    return String.format("%s : %s", this.s, this.d);
+    return String.format("%s : %.2f", this.s, this.d);
   }
 
 }
